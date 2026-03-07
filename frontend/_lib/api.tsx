@@ -4,9 +4,12 @@ import { BACKEND_URL } from "./consts"
 export async function searchPlayer(name: string) {
     try {
         const request = `${BACKEND_URL}/search?name=${name}`;
+        console.log(request);
         const res = await fetch(request);
         if(!res.ok) throw new Error("Failed to fetch search query");
-        return (await res.json()).result;
+        const data = (await res.json()).result
+        console.log(data);
+        return data;
     }
     catch(err) {
         console.error("Player search failed: ", err);
@@ -16,7 +19,9 @@ export async function searchPlayer(name: string) {
 
 export async function getPlayer(id : string) {
     try {
+        console.log(BACKEND_URL);
         const res = await fetch(`${BACKEND_URL}/player/${id}`);
+
         if(!res.ok) throw new Error("Failed to fetch player");
         return (await res.json()).player;
     }
