@@ -4,9 +4,12 @@ import { BACKEND_URL } from "./consts"
 export async function searchPlayer(name: string) {
     try {
         const request = `${BACKEND_URL}/search?name=${name}`;
-        const res = await fetch(request);
-        if(!res.ok) throw new Error("Failed to fetch search query");
-        return (await res.json()).result;
+        console.log(request);
+        const resJson = await fetch(request);
+        if(!resJson.ok) throw new Error("Failed to fetch search query");
+        const res = await resJson.json()
+        console.log(res);
+        return res.players;
     }
     catch(err) {
         console.error("Player search failed: ", err);
@@ -16,9 +19,12 @@ export async function searchPlayer(name: string) {
 
 export async function getPlayer(id : string) {
     try {
-        const res = await fetch(`${BACKEND_URL}/player/${id}`);
-        if(!res.ok) throw new Error("Failed to fetch player");
-        return (await res.json()).player;
+        console.log(BACKEND_URL);
+        const resJson = await fetch(`${BACKEND_URL}/players/${id}`);
+
+        if(!resJson.ok) throw new Error("Failed to fetch player");
+        const res = await resJson.json();
+        return res.player;
     }
     catch(err) {
         console.error("Player fetch failed: ", err);
@@ -35,9 +41,10 @@ Player:
 */
 export async function getAllPlayers() {
     try {
-        const res = await fetch(`${BACKEND_URL}/players`);
-        if(!res.ok) throw new Error("Failed to fetch all players");
-        return await res.json();
+        const resJson = await fetch(`${BACKEND_URL}/players`);
+        if(!resJson.ok) throw new Error("Failed to fetch all players");
+        const res = await resJson.json();
+        return res.players;
     }
     catch(err) {
         console.error("All players fetch failed: ", err);

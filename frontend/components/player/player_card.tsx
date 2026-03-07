@@ -50,6 +50,33 @@ function PlayerOverview({player} : {player : PlayerData}) {
 }
 
 function PlayerStats({player} : {player : PlayerData}) {
+    const formatSeasons = (seasons: number[]) => {
+        if (!seasons || !seasons.length) {
+            return "N/A";
+        }
+
+        return seasons.join(", ");
+    };
+
+    const renderHitterRows = (hitter: Record<string, number>, section: string) => {
+        const statEntries = Object.entries(hitter || {});
+
+        if (!statEntries.length) {
+            return (
+                <tr>
+                    <td className="px-4 py-3 text-center normal-case" colSpan={2}>No stats available</td>
+                </tr>
+            );
+        }
+
+        return statEntries.map(([stat, value]) => (
+            <tr key={`${section}-${stat}`}>
+                <td className="px-4 py-3">{stat}</td>
+                <td className="px-4 py-3 text-center">{value}</td>
+            </tr>
+        ));
+    };
+
     return(
        <div className="bg-emerald-600 rounded-lg border border-zinc-800 overflow-hidden">
             <table className="w-full text-xl text-left">
@@ -59,13 +86,29 @@ function PlayerStats({player} : {player : PlayerData}) {
                         <th className="px-4 py-3 text-center">Measured</th>
                     </tr>
                 </thead>
+                 <thead className="bg-emerald-300 text-black uppercase">
+                    <tr>
+                        <th className="px-4 py-3 text-center" colSpan={2}>Projection ({formatSeasons(player.stats.projection.seasons)})</th>
+                    </tr>
+                </thead>
                 <tbody className="bg-emerald-200 text-black uppercase">
-                    {Object.entries(player.stats).map(([stat, number]) => (
-                        <tr key={stat}>
-                            <td className="px-4 py-3">{stat}</td>
-                            <td className="px-4 py-3">{number}</td>
-                        </tr>
-                    ))}
+                    {renderHitterRows(player.stats.projection.hitter, "projection")}
+                </tbody>
+                 <thead className="bg-emerald-300 text-black uppercase">
+                    <tr>
+                        <th className="px-4 py-3 text-center" colSpan={2}>Last Year ({formatSeasons(player.stats.lastYear.seasons)})</th>
+                    </tr>
+                </thead>
+                <tbody className="bg-emerald-200 text-black uppercase">
+                    {renderHitterRows(player.stats.lastYear.hitter, "lastYear")}
+                </tbody>
+                 <thead className="bg-emerald-300 text-black uppercase">
+                    <tr>
+                        <th className="px-4 py-3 text-center" colSpan={2}>Three Year Average ({formatSeasons(player.stats.threeYearAvg.seasons)})</th>
+                    </tr>
+                </thead>
+                <tbody className="bg-emerald-200 text-black uppercase">
+                    {renderHitterRows(player.stats.threeYearAvg.hitter, "threeYearAvg")}
                 </tbody>
           </table>    
         </div>
