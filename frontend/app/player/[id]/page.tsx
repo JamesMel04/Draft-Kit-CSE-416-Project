@@ -7,7 +7,7 @@ export default async function PlayerView({
     params : Promise<{ id : string }>
 }) {
     const {id} = await params;
-    const player = (await getPlayer(id)).player_data;
+    const player = (await getPlayer(id));
     // console.log(id);
     return(
         <div>

@@ -40,8 +40,8 @@ app.get('/player/:player_id', async (req: Request, res: Response) => {
   const { player_id } = req.params;
   try {
     // Get player data from API based on player_id
-    const player_data = test_player_data_set.find(p => p.id === player_id); // Placeholder for actual API call
-    res.json({ player_data });
+    const player = test_player_data_set.find(p => p.id === player_id); // Placeholder for actual API call
+    res.json({ player });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch player data' });
   }
