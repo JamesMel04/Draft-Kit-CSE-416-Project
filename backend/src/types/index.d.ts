@@ -15,6 +15,6 @@ export type DraftData = {
 export type LeagueData = {
   name: string;
   teams: {
-    [team_manager: string]: DraftData;
+    [teamManager: string]: DraftData;
   }
 };

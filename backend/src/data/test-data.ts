@@ -1,6 +1,6 @@
 import { PlayerData, DraftData, LeagueData } from "../types";
 
-export const test_player_data_set: PlayerData[] = [
+export const testPlayerDataSet: PlayerData[] = [
   {
     id: "player1",
     name: "PlayerName 1",
@@ -27,35 +27,35 @@ export const test_player_data_set: PlayerData[] = [
   }
 ];
 
-export const test_draft_data_set: DraftData[] = [
+export const testDraftDataSet: DraftData[] = [
   {
     id: "draft1",
     roster: {
-      "C": test_player_data_set[0],
-      "1B": test_player_data_set[1]
+      "C": testPlayerDataSet[0],
+      "1B": testPlayerDataSet[1]
     }
   },
   {
     id: "draft2",
     roster: {
-      "C": test_player_data_set[2],
-      "1B": test_player_data_set[3]
+      "C": testPlayerDataSet[2],
+      "1B": testPlayerDataSet[3]
     }
   }
 ];
 
-export const test_league_data_set: LeagueData[] = [
+export const testLeagueDataSet: LeagueData[] = [
   {
     name: "Example League",
     teams: {
-      "TeamManager 1": test_draft_data_set[0],
-      "TeamManager 2": test_draft_data_set[1]
+      "TeamManager 1": testDraftDataSet[0],
+      "TeamManager 2": testDraftDataSet[1]
     }
   }
 ];
 
-export const test_player: PlayerData = test_player_data_set[0];
+export const testPlayer: PlayerData = testPlayerDataSet[0];
 
-export const test_draft: DraftData = test_draft_data_set[0];
+export const testDraft: DraftData = testDraftDataSet[0];
 
-export const test_league: LeagueData = test_league_data_set[0];
+export const testLeague: LeagueData = testLeagueDataSet[0];
