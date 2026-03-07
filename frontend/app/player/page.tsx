@@ -1,5 +1,6 @@
 import { getAllPlayers } from "@/_lib/api";
 import PlayerTable from "@/components/player/player_table";
+export const dynamic = "force-dynamic";
 
 export default async function Player() {
     // Fetch players
