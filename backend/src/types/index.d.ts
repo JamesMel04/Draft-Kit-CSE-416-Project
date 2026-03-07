@@ -1,5 +1,5 @@
 export type PlayerStats = {
-  season: number[];
+  seasons: number[];
   hitter: Record<string, number>;
 };
 
