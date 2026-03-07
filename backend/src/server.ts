@@ -2,10 +2,10 @@ import express, {Request, Response} from 'express';
 import cors from "cors"
 import dotenv from 'dotenv';
 
-import playersRouter from './routes/players';
-import draftRouter from './routes/draft';
 import searchRouter from './routes/search';
+import playersRouter from './routes/players';
 import compareRouter from './routes/compare';
+import draftRouter from './routes/draft';
 
 dotenv.config();
 
@@ -19,10 +19,10 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello, World!');
 });
 
-app.use('/players', playersRouter);
-app.use('/draft', draftRouter);
 app.use('/search', searchRouter);
+app.use('/players', playersRouter);
 app.use('/compare', compareRouter);
+app.use('/draft', draftRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
