@@ -9,15 +9,15 @@ export const testPlayerDataSet: PlayerData[] = [
     suggestedValue: 32,
     stats: {
       projection: {
-        season: [2026],
+        seasons: [2026],
         hitter: {"Homeruns": 1}
       },
       lastYear: {
-        season: [2025],
+        seasons: [2025],
         hitter: {"Homeruns": 1}
       },
       threeYearAvg: {
-        season: [2023, 2024, 2025],
+        seasons: [2023, 2024, 2025],
         hitter: {"Homeruns": 3}
       }
     }
@@ -30,15 +30,15 @@ export const testPlayerDataSet: PlayerData[] = [
     suggestedValue: 32,
     stats: {
       projection: {
-        season: [2026],
+        seasons: [2026],
         hitter: {"Homeruns": 2}
       },
       lastYear: {
-        season: [2025],
+        seasons: [2025],
         hitter: {"Homeruns": 2}
       },
       threeYearAvg: {
-        season: [2023, 2024, 2025],
+        seasons: [2023, 2024, 2025],
         hitter: {"Homeruns": 6}
       }
     }
@@ -51,15 +51,15 @@ export const testPlayerDataSet: PlayerData[] = [
     suggestedValue: 32,
     stats: {
       projection: {
-        season: [2026],
+        seasons: [2026],
         hitter: {"Homeruns": 3}
       },
       lastYear: {
-        season: [2025],
+        seasons: [2025],
         hitter: {"Homeruns": 3}
       },
       threeYearAvg: {
-        season: [2023, 2024, 2025],
+        seasons: [2023, 2024, 2025],
         hitter: {"Homeruns": 9}
       }
     }
@@ -72,15 +72,15 @@ export const testPlayerDataSet: PlayerData[] = [
     suggestedValue: 32,
     stats: {
       projection: {
-        season: [2026],
+        seasons: [2026],
         hitter: {"Homeruns": 4}
       },
       lastYear: {
-        season: [2025],
+        seasons: [2025],
         hitter: {"Homeruns": 4}
       },
       threeYearAvg: {
-        season: [2023, 2024, 2025],
+        seasons: [2023, 2024, 2025],
         hitter: {"Homeruns": 12}
       }
     }
