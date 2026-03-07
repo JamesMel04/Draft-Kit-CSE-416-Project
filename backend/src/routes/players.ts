@@ -1,10 +1,9 @@
 import { Router, Request, Response } from "express";
 import axios from 'axios';
-import { testPlayerDataSet } from '../data/test-data';
 import { PlayerData } from "../types";
 
 const router = Router();
-const API_URL = process.env.API_URL || 'http://localhost:5000';
+const API_URL = process.env.API_URL || 'https://api-cse-416-project.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
