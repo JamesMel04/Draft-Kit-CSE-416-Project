@@ -13,11 +13,23 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello, World!');
 });
 
+/* route to return all players for front-end player view */
+app.get('/players', async (req : Request, res : Response) => {
+  try {
+    // For now, just returns all players in test.data.ts
+    const players = test_player_data_set;
+    res.json(players);
+  }
+  catch(error) {
+    res.status(500).json({ error: 'Failed to fetch players' });
+  }
+});
+
 app.get('/search', async (req: Request, res: Response) => {
   const { name } = req.query;
   try {
     // Search for players based on name using API
-    const players = [{ player_id: 'player1', name: 'PlayerName 1' }]; // Example search result
+    const players = [{ id: 'player1', name: 'PlayerName 1' }]; // Example search result
     res.json({ result: players });
   } catch (error) {
     res.status(500).json({ error: 'Failed to search for players' });
