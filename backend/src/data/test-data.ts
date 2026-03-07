@@ -5,7 +5,7 @@ export const testPlayerDataSet: PlayerData[] = [
     id: "player1",
     name: "PlayerName 1",
     team: "PlayerTeam 1",
-    stats: {}
+    stats: {"Homeruns": 1000}
   },
   {
     id: "player2",
