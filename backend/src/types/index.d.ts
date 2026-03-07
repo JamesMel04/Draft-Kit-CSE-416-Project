@@ -1,8 +1,19 @@
+export type PlayerStats = {
+  season: number[];
+  hitter: Record<string, number>;
+};
+
 export type PlayerData = {
   id: string;
   name: string;
   team: string;
-  stats: Record<string, number>;
+  positions: string[];
+  suggestedValue: number;
+  stats: {
+    projection: PlayerStats,
+    lastYear: PlayerStats,
+    threeYearAvg: PlayerStats
+  };
 };
 
 export type DraftData = {
