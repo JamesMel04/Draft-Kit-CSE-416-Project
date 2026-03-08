@@ -6,7 +6,15 @@ export default function PlayerCard({player} : {player : PlayerData} ) {
     return(
         <div className="w-full flex items-start" style={{ gap: "1rem", padding: "1rem" }}>
             <PlayerSidebar player={player} />
+        <div className="w-full flex items-start" style={{ gap: "1rem", padding: "1rem" }}>
+            <PlayerSidebar player={player} />
 
+            <div className="flex-1 min-w-0 flex flex-col" style={{ rowGap: "1rem" }}>
+                <PlayerOverview player={player} />
+                <PlayerStats player={player} />
+                {/* <PlayerCompare player={player} /> */} {/* Still have to implement */}
+            </div>
+        </div>
             <div className="flex-1 min-w-0 flex flex-col" style={{ rowGap: "1rem" }}>
                 <PlayerOverview player={player} />
                 <PlayerStats player={player} />
@@ -23,6 +31,7 @@ function PlayerSidebar({player} : {player : PlayerData}) {
                 <div className="flex items-center justify-center h-56 bg-blue-950 rounded text-lg font-bold text-white" style={{ marginBottom: "1rem" }}>Photo</div>
                 <h2 className="text-lg font-bold">{player.name}</h2>
                 <p className="text-lg font-bold">{player.team}</p>
+        <p className="text-lg font-bold">{player.positions.join(", ")}</p>
             </div>
 
             <div className="bg-emerald-500 rounded-lg" style={{ padding: "1rem" }}>
