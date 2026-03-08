@@ -25,11 +25,22 @@ export default function RootLayout({
       >
         <div className="app-container">
 
+          <header className="topbar">
+            <div className="topbar-left">
+              <Link href="/" className="logo">Emerald!</Link>
+            </div>
+
+            <div className="topbar-right">
+              <div className="searchbar">
+                <PlayerSearch/>
+              </div>
+              <div className="user">
+                <Link href="/profile">Username</Link>
+              </div>
+            </div>
+          </header>
 
           <aside className="sidebar">
-            <div className="logo">
-              Emerald!
-            </div>
             <div className="nav">
               <Link href="/">Home</Link>
               <Link href="/profile">Profile</Link>
@@ -39,16 +50,6 @@ export default function RootLayout({
               <Link href="feed">Sports Feed</Link>
             </div>
           </aside>
-
-
-          <header className="topbar">
-            <div className="searchbar">
-              <PlayerSearch/>
-            </div>
-            <div className="user">
-              <Link href="/profile">Username</Link>
-            </div>
-          </header>
           <main className="main-content">
             {children}
           </main>
