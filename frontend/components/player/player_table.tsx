@@ -3,6 +3,15 @@ import Link from "next/link";
 import { PlayerData } from "@/_lib/types";
 
 export default function PlayerTable({ players }  : {players : PlayerData[] } ) {
+    // Extract all unique stat names from all players' projection hitter data
+    const statColumns = Array.from(
+        new Set(
+            players.flatMap(player => 
+                Object.keys(player.stats?.projection?.hitter || {})
+            )
+        )
+    ).sort();
+
     return(
      <div className="bg-gray-600 rounded-lg border border-zinc-800 overflow-hidden">
       <table className="w-full table-fixed text-xl text-left">
@@ -13,6 +22,9 @@ export default function PlayerTable({ players }  : {players : PlayerData[] } ) {
             <th className="px-4 py-3 text-center">Name</th>
             <th className="px-4 py-3 text-center">Team</th>
             <th className="px-4 py-3 text-center">Position</th>
+            {statColumns.map((statName) => (
+              <th key={statName} className="px-4 py-3 text-center">{statName}</th>
+            ))}
           </tr>
         </thead>
 
@@ -34,6 +46,12 @@ export default function PlayerTable({ players }  : {players : PlayerData[] } ) {
               <td className="px-4 py-3 text-white text-center">
                 {player.positions.join(", ")}
               </td>
+
+              {statColumns.map((statName) => (
+                <td key={`${player.id}-${statName}`} className="px-4 py-3 text-white text-center">
+                  {player.stats?.projection?.hitter?.[statName] ?? '-'}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>
