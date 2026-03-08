@@ -12,15 +12,6 @@ export default function PlayerTable({ players }  : {players : PlayerData[] } ) {
         )
     ).sort();
 
-    // Extract all unique stat names from all players' projection hitter data
-    const statColumns = Array.from(
-        new Set(
-            players.flatMap(player => 
-                Object.keys(player.stats?.projection?.hitter || {})
-            )
-        )
-    ).sort();
-
     return(
      <div className="bg-gray-600 rounded-lg border border-zinc-800 overflow-hidden">
       <table className="w-full table-fixed text-xl text-left">
