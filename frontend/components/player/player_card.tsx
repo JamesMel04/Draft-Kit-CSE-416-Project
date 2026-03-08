@@ -6,6 +6,15 @@ export default function PlayerCard({player} : {player : PlayerData} ) {
     return(
         <div className="w-full flex items-start" style={{ gap: "1rem", padding: "1rem" }}>
             <PlayerSidebar player={player} />
+        <div className="w-full flex items-start" style={{ gap: "1rem", padding: "1rem" }}>
+            <PlayerSidebar player={player} />
+
+            <div className="flex-1 min-w-0 flex flex-col" style={{ rowGap: "1rem" }}>
+                <PlayerOverview player={player} />
+                <PlayerStats player={player} />
+                {/* <PlayerCompare player={player} /> */} {/* Still have to implement */}
+            </div>
+        </div>
             <div className="flex-1 min-w-0 flex flex-col" style={{ rowGap: "1rem" }}>
                 <PlayerOverview player={player} />
                 <PlayerStats player={player} />
