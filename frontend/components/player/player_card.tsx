@@ -28,6 +28,7 @@ function PlayerSidebar({player} : {player : PlayerData}) {
         <div className="flex items-center justify-center h-50 bg-blue-950 rounded mb-3 text-lg font-bold text-white">Photo</div>
         <h2 className="text-lg font-bold">{player.name}</h2>
         <p className="text-lg font-bold">{player.team}</p>
+        <p className="text-lg font-bold">{player.positions.join(", ")}</p>
       </div>
 
       <div className="bg-emerald-500 rounded-lg p-4">
