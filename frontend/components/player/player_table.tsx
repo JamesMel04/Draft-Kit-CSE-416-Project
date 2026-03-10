@@ -21,6 +21,7 @@ export default function PlayerTable({ players }  : {players : PlayerData[] } ) {
           <tr>
             <th className="px-4 py-3 text-center">Name</th>
             <th className="px-4 py-3 text-center">Team</th>
+            <th className="px-4 py-3 text-center">Position</th>
             {statColumns.map((statName) => (
               <th key={statName} className="px-4 py-3 text-center">{statName}</th>
             ))}
