@@ -1,8 +1,10 @@
 "use client"
 import Link from "next/link";
 import { PlayerData } from "@/_lib/types";
+import { useRouter } from "next/navigation"
 
 export default function PlayerTable({ players }  : {players : PlayerData[] } ) {
+    const router = useRouter();
     // Extract all unique stat names from all players' projection hitter data
     const statColumns = Array.from(
         new Set(
@@ -21,6 +23,7 @@ export default function PlayerTable({ players }  : {players : PlayerData[] } ) {
           <tr>
             <th className="px-4 py-3 text-center">Name</th>
             <th className="px-4 py-3 text-center">Team</th>
+            <th className="px-4 py-3 text-center">Position</th>
             {statColumns.map((statName) => (
               <th key={statName} className="px-4 py-3 text-center">{statName}</th>
             ))}
@@ -33,11 +36,10 @@ export default function PlayerTable({ players }  : {players : PlayerData[] } ) {
             <tr
               key={player.id}
               className="hover:bg-blue-800 transition cursor-pointer"
+              onClick={() => router.push(`/player/${player.id}`)}
             >
               <td className="px-4 py-3 font-large text-white">
-                <Link href={`/player/${player.id}`}>
-                    {player.name}
-                </Link>
+                {player.name}
               </td>
               <td className="px-4 py-3 text-white text-center">
                 {player.team}
