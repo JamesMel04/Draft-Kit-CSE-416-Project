@@ -48,6 +48,6 @@ export async function getAllPlayers() {
     }
     catch(err) {
         console.error("All players fetch failed: ", err);
-        return null;
+        return [];
     }
 }
