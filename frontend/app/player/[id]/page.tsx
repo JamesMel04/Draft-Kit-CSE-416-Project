@@ -10,7 +10,7 @@ export default async function PlayerView({
     const player = (await getPlayer(id));
     // console.log(id);
     return(
-        <div className="w-full py-8">
+        <div className="w-full py-5">
             <PlayerCard player={player}/>
         </div>
     );
