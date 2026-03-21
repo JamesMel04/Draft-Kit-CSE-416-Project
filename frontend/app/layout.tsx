@@ -47,7 +47,7 @@ export default function RootLayout({
               <Link href="/player">Player</Link>
               <Link href="/draft">Draft</Link>
               <Link href="/evaluation">Team Evaluation</Link>
-              <Link href="feed">Sports Feed</Link>
+              <Link href="/feed">Sports Feed</Link>
             </div>
           </aside>
           <main className="main-content">
