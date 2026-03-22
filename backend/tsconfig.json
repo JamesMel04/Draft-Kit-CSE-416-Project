@@ -10,6 +10,15 @@
     "esModuleInterop": true,
 
     "skipLibCheck": true,
-    "sourceMap": true
+    "sourceMap": true,
+
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"],
+      "@data/*": ["./data/*"],
+      "@routes/*": ["./routes/*"],
+      "@utils/*": ["./utils/*"],
+      "@types/*": ["./types/*"]
+    }
   }
 }

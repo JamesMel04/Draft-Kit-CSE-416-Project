@@ -1,25 +1,26 @@
 import express, {Request, Response} from 'express';
-import cors from "cors"
+import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 
-import searchRouter from './routes/search';
-import playersRouter from './routes/players';
-import compareRouter from './routes/compare';
-import draftRouter from './routes/draft';
+import playersRouter from '@routes/players';
+import compareRouter from '@routes/compare';
+import draftRouter from '@routes/draft';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const PUBLIC_DIR = path.join(__dirname, '../public');
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('Hello, World!');
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
-app.use('/search', searchRouter);
 app.use('/players', playersRouter);
 app.use('/compare', compareRouter);
 app.use('/draft', draftRouter);
