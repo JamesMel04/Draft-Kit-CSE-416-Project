@@ -2,7 +2,6 @@ import express, {Request, Response} from 'express';
 import cors from "cors"
 import dotenv from 'dotenv';
 
-import searchRouter from './routes/search';
 import playersRouter from './routes/players';
 import compareRouter from './routes/compare';
 import draftRouter from './routes/draft';
@@ -19,7 +18,6 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello, World!');
 });
 
-app.use('/search', searchRouter);
 app.use('/players', playersRouter);
 app.use('/compare', compareRouter);
 app.use('/draft', draftRouter);

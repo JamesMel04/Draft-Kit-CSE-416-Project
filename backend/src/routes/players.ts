@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import axios from 'axios';
 import { PlayerData, UpstreamPlayersPayload } from "../types";
-import { parseBoolean, parsePositiveInt, parseSortString } from "../utils/parsers";
+import { parseBoolean, parsePositiveInt, parseStringQuery } from "../utils/parsers";
 import { isValidSortField, sortPlayers } from "../utils/sorters";
 import { buildPagination, normalizeUpstreamPlayers } from "../utils/pagination";
 
@@ -15,12 +15,43 @@ const api = axios.create({
 });
 
 router.get('/', async (req: Request, res: Response) => {
-  const requestedSort = parseSortString(req.query.sort, 'name');
+  const name = parseStringQuery(req.query.name, '');
+  const requestedSort = parseStringQuery(req.query.sort, 'name');
   const asc = parseBoolean(req.query.asc, true);
   const page = parsePositiveInt(req.query.page, 1);
   const limit = Math.min(parsePositiveInt(req.query.limit, 25), 100);
 
+  const filterByName = (players: PlayerData[]) => {
+    if (!name) {
+      return players;
+    }
+
+    const lowerName = name.toLowerCase();
+    return players.filter((player) => player.name.toLowerCase().includes(lowerName));
+  };
+
+  const buildLocalResponse = (players: PlayerData[], fallback = false) => {
+    const filteredPlayers = filterByName(players);
+    const sort = isValidSortField(requestedSort, filteredPlayers)? requestedSort : 'name';
+    const sortedPlayers = sortPlayers(filteredPlayers, sort, asc);
+    const pagination = buildPagination(sortedPlayers.length, page, limit);
+    const start = (pagination.page - 1) * pagination.limit;
+    const paginatedPlayers = sortedPlayers.slice(start, start + pagination.limit);
+
+    return {
+      players: paginatedPlayers,
+      pagination,
+      sorting: { sort, asc },
+      ...(fallback? { fallback: true } : {})
+    };
+  };
+
   try {
+    if (name) {
+      const { data } = await api.get<PlayerData[]>('/players');
+      return res.json(buildLocalResponse(data));
+    }
+
     const { data } = await api.get<UpstreamPlayersPayload>('/players', {
       params: { sort: requestedSort, asc, page, limit }
     });
@@ -55,18 +86,7 @@ router.get('/', async (req: Request, res: Response) => {
   } catch (error) {
     try {
       const { data } = await api.get<PlayerData[]>('/players');
-      const sort = isValidSortField(requestedSort, data)? requestedSort : 'name';
-      const sortedPlayers = sortPlayers(data, sort, asc);
-      const pagination = buildPagination(sortedPlayers.length, page, limit);
-      const start = (pagination.page - 1) * pagination.limit;
-      const paginatedPlayers = sortedPlayers.slice(start, start + pagination.limit);
-
-      return res.json({
-        players: paginatedPlayers,
-        pagination,
-        sorting: { sort, asc },
-        fallback: true
-      });
+      return res.json(buildLocalResponse(data, true));
     } catch (fallbackError) {
       console.error('API Error:', fallbackError);
       return res.status(500).json({ error: 'Failed to fetch player data' });

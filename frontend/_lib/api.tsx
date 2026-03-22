@@ -3,7 +3,7 @@ import { BACKEND_URL } from "./consts"
 
 export async function searchPlayer(name: string) {
     try {
-        const request = `${BACKEND_URL}/search?name=${name}`;
+        const request = `${BACKEND_URL}/players?name=${name}`;
         console.log(request);
         const resJson = await fetch(request);
         if(!resJson.ok) throw new Error("Failed to fetch search query");
