@@ -16,8 +16,8 @@ const api = axios.create({
 
 router.get('/', async (req: Request, res: Response) => {
   const name = parseStringQuery(req.query.name, '');
-  const requestedSort = parseStringQuery(req.query.sort, 'name');
-  const asc = parseBoolean(req.query.asc, true);
+  const requestedSort = parseStringQuery(req.query.sort, 'suggestedValue');
+  const asc = parseBoolean(req.query.asc, false);
   const page = parsePositiveInt(req.query.page, 1);
   const limit = Math.min(parsePositiveInt(req.query.limit, 25), 100);
 
@@ -32,7 +32,7 @@ router.get('/', async (req: Request, res: Response) => {
 
   const buildLocalResponse = (players: PlayerData[], fallback = false) => {
     const filteredPlayers = filterByName(players);
-    const sort = isValidSortField(requestedSort, filteredPlayers)? requestedSort : 'name';
+    const sort = isValidSortField(requestedSort, filteredPlayers)? requestedSort : 'suggestedValue';
     const sortedPlayers = sortPlayers(filteredPlayers, sort, asc);
     const pagination = buildPagination(sortedPlayers.length, page, limit);
     const start = (pagination.page - 1) * pagination.limit;
@@ -57,7 +57,7 @@ router.get('/', async (req: Request, res: Response) => {
     });
 
     const upstream = normalizeUpstreamPlayers(data);
-    const sort = isValidSortField(requestedSort, upstream.players)? requestedSort : 'name';
+    const sort = isValidSortField(requestedSort, upstream.players)? requestedSort : 'suggestedValue';
 
     if (upstream.isPaginated) {
       const pagination = buildPagination(
