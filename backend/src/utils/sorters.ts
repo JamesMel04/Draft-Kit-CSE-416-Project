@@ -1,4 +1,4 @@
-import { PlayerData, SortField, SortAsc } from "../types";
+import { PlayerData, SortField, SortAsc } from '@/types';
 
 export function isValidSortField(sort: SortField, players: PlayerData[] = []): boolean {
   if (players.length === 0) {

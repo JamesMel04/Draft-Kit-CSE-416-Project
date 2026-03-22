@@ -1,9 +1,9 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response } from 'express';
 import axios from 'axios';
-import { PlayerData, UpstreamPlayersPayload } from "../types";
-import { parseBoolean, parsePositiveInt, parseStringQuery } from "../utils/parsers";
-import { isValidSortField, sortPlayers } from "../utils/sorters";
-import { buildPagination, normalizeUpstreamPlayers } from "../utils/pagination";
+import { PlayerData, UpstreamPlayersPayload } from '@/types';
+import { parseBoolean, parsePositiveInt, parseStringQuery } from '@/utils/parsers';
+import { isValidSortField, sortPlayers } from '@/utils/sorters';
+import { buildPagination, normalizeUpstreamPlayers } from '@/utils/pagination';
 
 const router = Router();
 const API_URL = process.env.API_URL || 'https://api-cse-416-project.onrender.com';

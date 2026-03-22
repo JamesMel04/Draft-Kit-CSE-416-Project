@@ -1,4 +1,4 @@
-import { PlayerData, DraftData, LeagueData } from "../types";
+import { PlayerData, DraftData, LeagueData } from '@/types';
 
 export const testPlayerDataSet: PlayerData[] = [
   {

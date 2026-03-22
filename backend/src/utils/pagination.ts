@@ -1,4 +1,4 @@
-import { PaginationMeta, UpstreamPlayersPayload } from "../types";
+import { PaginationMeta, UpstreamPlayersPayload } from '@/types';
 
 export function buildPagination(total: number, page: number, limit: number): PaginationMeta {
   const totalPages = Math.max(1, Math.ceil(total / limit));

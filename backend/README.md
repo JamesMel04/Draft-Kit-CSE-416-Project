@@ -14,7 +14,7 @@ All requests and responses use **JSON**.
 
 | Method | Endpoint             | Description             |
 | ------ | -------------------- | ----------------------- |
-| GET    | `/search`            | Search players by name  |
+| GET    | `/`                  | Health check message    |
 | GET    | `/players`           | Get all player data     |
 | GET    | `/players/:id`       | Get a specific player   |
 | GET    | `/players/:id/notes` | Get notes for a player  |
@@ -25,46 +25,21 @@ All requests and responses use **JSON**.
 
 ---
 
-# Search Players
-
-**GET** `/search`
-
-Search players by name.
-
-### Query Parameters
-
-| Name | Type   | Description           |
-| ---- | ------ | --------------------- |
-| name | string | Player name to search |
-
-### Example Request
-
-```
-GET /search?name=PlayerName 1
-```
-
-### Example Response
-
-```json
-{
-  "players": [
-    {
-      "id": "player1",
-      "name": "PlayerName 1",
-      "team": "PlayerTeam 1",
-      "stats": {}
-    }
-  ]
-}
-```
-
----
-
 # Get All Players
 
 **GET** `/players`
 
-Returns all available player data.
+Returns player data with optional search, sorting, and pagination.
+
+### Query Parameters
+
+| Name  | Type    | Description                               |
+| ----- | ------- | ----------------------------------------- |
+| name  | string  | Filter players by name (case-insensitive) |
+| sort  | string  | Field to sort by (default: `name`)        |
+| asc   | boolean | Sort ascending (`true`) or descending     |
+| page  | number  | Page number (default: `1`)                |
+| limit | number  | Results per page (default: `25`, max 100) |
 
 ### Example Response
 
@@ -83,7 +58,19 @@ Returns all available player data.
       "team": "PlayerTeam 2",
       "stats": {}
     }
-  ]
+  ],
+  "pagination": {
+    "total": 2,
+    "page": 1,
+    "limit": 25,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrev": false
+  },
+  "sorting": {
+    "sort": "name",
+    "asc": true
+  }
 }
 ```
 
@@ -150,7 +137,10 @@ Adds a note for a specific player.
 
 ```json
 {
-  "content": "Notes on Player",
+  "notes": {
+    "id": "player1",
+    "content": "Notes on Player"
+  },
   "status": "saved"
 }
 ```
