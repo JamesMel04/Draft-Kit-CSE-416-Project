@@ -44,7 +44,7 @@ export default function RootLayout({
             <div className="nav">
               <Link href="/">Home</Link>
               <Link href="/profile">Profile</Link>
-              <Link href="/player">Player</Link>
+              <Link href="/players">Player</Link>
               <Link href="/draft">Draft</Link>
               <Link href="/evaluation">Team Evaluation</Link>
               <Link href="/feed">Sports Feed</Link>

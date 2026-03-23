@@ -1,53 +1,48 @@
 /* ONLY ADD SERVER FUNCTIONS HERE, NEVER DIRECTLY CALL fetch() */
-import { BACKEND_URL } from "./consts"
+import { BACKEND_URL } from "./consts";
+import { PlayerData, PlayerGetParams, PlayerGetResponse } from "./types";
+import axios from "axios"
 
-export async function searchPlayer(name: string) {
+/*
+* Config for axios. Much easier to make backend requests this way
+*/
+const api = axios.create({
+    baseURL: `${BACKEND_URL}`,
+});
+
+
+export async function getPlayer(id : string) : Promise<PlayerData> {
     try {
-        const request = `${BACKEND_URL}/players?name=${name}`;
-        console.log(request);
-        const resJson = await fetch(request);
-        if(!resJson.ok) throw new Error("Failed to fetch search query");
-        const res = await resJson.json()
-        console.log(res);
-        return res.players;
-    }
-    catch(err) {
-        console.error("Player search failed: ", err);
-        return null;
-    }
-}
-
-export async function getPlayer(id : string) {
-    try {
-        console.log(BACKEND_URL);
-        const resJson = await fetch(`${BACKEND_URL}/players/${id}`);
-
-        if(!resJson.ok) throw new Error("Failed to fetch player");
-        const res = await resJson.json();
+        const res : {player : PlayerData}= (await api.get(`/players/${id}`)).data;
         return res.player;
     }
     catch(err) {
         console.error("Player fetch failed: ", err);
-        return null;
+        throw err;
     }
 }
 
 /*
-For now, returns list of players of form:
-Player:
-    id
-    name
-    team
+Get players on specific page, based off parameters specified in backend documentation (README)
 */
-export async function getAllPlayers() {
+export async function getPlayers(params : PlayerGetParams) : Promise<PlayerGetResponse> {
     try {
-        const resJson = await fetch(`${BACKEND_URL}/players`);
-        if(!resJson.ok) throw new Error("Failed to fetch all players");
-        const res = await resJson.json();
-        return res.players;
+        const query = new URLSearchParams();
+        let k: keyof typeof params;
+        for (k in params) {
+            const v = (params[k]);
+            if (v !== null && v !== undefined) query.append(k, v.toString());
+        }
+        
+        // Now query to the backend
+        const url = query?.toString() ? `/players?${query.toString()}` : `/players`
+        console.log(`Querying ${url}`);
+        const res = (await api.get<PlayerGetResponse>(url)).data;
+
+        return res;
     }
     catch(err) {
-        console.error("All players fetch failed: ", err);
-        return [];
+        console.error("Players query failed: ", err);
+        throw err;
     }
 }
