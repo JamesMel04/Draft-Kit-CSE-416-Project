@@ -41,14 +41,3 @@ export type PaginationMeta = {
   hasNext: boolean;
   hasPrev: boolean;
 };
-
-export type UpstreamPlayersPayload = PlayerData[] | {
-  players?: PlayerData[];
-  data?: PlayerData[];
-  items?: PlayerData[];
-  pagination?: Partial<PaginationMeta>;
-  total?: number;
-  page?: number;
-  limit?: number;
-  totalPages?: number;
-};

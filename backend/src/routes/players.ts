@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
-import { PlayerData, UpstreamPlayersPayload } from '@/types';
+import { PlayerData } from '@/types';
 import { parseBoolean, parsePositiveInt, parseStringQuery } from '@/utils/parsers';
 import { isValidSortField, sortPlayers } from '@/utils/sorters';
-import { buildPagination, normalizeUpstreamPlayers } from '@/utils/pagination';
+import { buildPagination } from '@/utils/pagination';
 
 const router = Router();
 const API_URL = process.env.API_URL || 'https://api-cse-416-project.onrender.com';
@@ -47,50 +47,11 @@ router.get('/', async (req: Request, res: Response) => {
   };
 
   try {
-    if (name) {
-      const { data } = await api.get<PlayerData[]>('/players');
-      return res.json(buildLocalResponse(data));
-    }
-
-    const { data } = await api.get<UpstreamPlayersPayload>('/players', {
-      params: { sort: requestedSort, asc, page, limit }
-    });
-
-    const upstream = normalizeUpstreamPlayers(data);
-    const sort = isValidSortField(requestedSort, upstream.players)? requestedSort : 'suggestedValue';
-
-    if (upstream.isPaginated) {
-      const pagination = buildPagination(
-        upstream.pagination?.total ?? upstream.players.length,
-        upstream.pagination?.page ?? page,
-        upstream.pagination?.limit ?? limit
-      );
-
-      return res.json({
-        players: upstream.players,
-        pagination,
-        sorting: { sort, asc }
-      });
-    }
-
-    const sortedPlayers = sortPlayers(upstream.players, sort, asc);
-    const pagination = buildPagination(sortedPlayers.length, page, limit);
-    const start = (pagination.page - 1) * pagination.limit;
-    const paginatedPlayers = sortedPlayers.slice(start, start + pagination.limit);
-
-    return res.json({
-      players: paginatedPlayers,
-      pagination,
-      sorting: { sort, asc }
-    });
+    const { data } = await api.get<PlayerData[]>('/players');
+    return res.json(buildLocalResponse(data, true));
   } catch (error) {
-    try {
-      const { data } = await api.get<PlayerData[]>('/players');
-      return res.json(buildLocalResponse(data, true));
-    } catch (fallbackError) {
-      console.error('API Error:', fallbackError);
-      return res.status(500).json({ error: 'Failed to fetch player data' });
-    }
+    console.error('API Error:', error);
+    return res.status(500).json({ error: 'Failed to fetch player data' });
   }
 });
 
