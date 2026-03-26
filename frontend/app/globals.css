@@ -30,8 +30,6 @@ body {
 
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html, body {
@@ -159,8 +157,12 @@ html, body {
   font-size: 0.72rem;
 }
 
+.user a {
+  white-space: nowrap;
+}
+
 .user a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 /* Page Content */
