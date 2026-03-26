@@ -30,8 +30,6 @@ body {
 
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html, body {
@@ -118,6 +116,21 @@ html, body {
   letter-spacing: 0.27px;
 }
 
+.searchbar {
+  display: flex;
+  align-items: center;
+}
+
+.searchbar form {
+  display: flex;
+  align-items: center;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+}
+
 .searchbar input {
   background: transparent;
   color: #ffffff;
@@ -144,8 +157,12 @@ html, body {
   font-size: 0.72rem;
 }
 
+.user a {
+  white-space: nowrap;
+}
+
 .user a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 /* Page Content */
@@ -159,3 +176,4 @@ html, body {
   overflow: auto;
   color: black;
 }
+

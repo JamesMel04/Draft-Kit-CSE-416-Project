@@ -1,10 +1,10 @@
 "use client"
-import Link from "next/link";
 import { PlayerData } from "@/_lib/types";
 import { useRouter } from "next/navigation"
 
 export default function PlayerTable({ players }  : {players : PlayerData[] | null } ) {
-    const router = useRouter();
+  const router = useRouter();
+
   const headerCellClass = "text-center whitespace-nowrap border-r border-zinc-700 last:border-r-0";
   const bodyCellClass = "text-white text-center whitespace-nowrap border-r border-zinc-700 last:border-r-0";
   const firstHeaderCellClass = "text-left whitespace-nowrap border-r border-zinc-700";
@@ -50,8 +50,8 @@ export default function PlayerTable({ players }  : {players : PlayerData[] | nul
           {players.map((player) => (
             <tr
               key={player.id}
-              className="hover:bg-blue-800 transition cursor-pointer"
-              onClick={() => router.push(`/player/${player.id}`)}
+              className="hover:bg-blue-800 cursor-pointer"
+              onClick={() => router.push(`/players/${player.id}`)}
             >
               <td className={firstBodyCellClass} style={firstCellStyle}>
                 {player.name}
