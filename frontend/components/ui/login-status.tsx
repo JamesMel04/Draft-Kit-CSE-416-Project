@@ -8,13 +8,12 @@ export default function HeaderUserMenu() {
     //Display log in button
     if(!isLoggedIn) {
         return (
-            <button
-                type="button"
-                className="inline-flex w-18 h-8  items-center justify-center rounded-full bg-emerald-700 px-6 text-base font-bold leading-none text-white transition-colors hover:bg-emerald-800 focus:outline-none"
-                onClick={() => console.log("Log In pressed")}
+            <Link
+                href="/login"
+                className="inline-flex w-18 h-8 items-center justify-center rounded-full bg-emerald-700 px-6 text-base font-bold leading-none text-white transition-colors hover:bg-emerald-800 focus:outline-none"
             >
-                Log In 
-            </button>
+                Log In
+            </Link>
         );
     }
 
