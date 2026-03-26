@@ -1,17 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { validateEmail } from "@/utils/validation";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [emailError, setEmailError] = useState("");
-
-    // Basic email validation
-    const validateEmail = (value: string) => {
-        if (!value) return "Email is required";
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Invalid email format";
-        return "";
-    };
 
     //Call when Log In is pressed
     const handleLogin = () => {
@@ -53,19 +48,18 @@ export default function LoginPage() {
                     className="w-full mt-8 py-4 rounded-lg bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 transition-colors"
                     onClick={handleLogin}
                 >
-                    Log In
+                    Login
                 </button>
 
                 {/* Create New Account Link */}
                 <p className="mt-6 text-center text-sm text-gray-500">
                     Don't have an account?{" "}
-                    <button
-                        type="button"
+                    <Link
+                        href="/register"
                         className="text-blue-600 underline font-medium hover:text-blue-700"
-                        onClick={() => console.log("Create New")}
                     >
                         Create New
-                    </button>
+                    </Link>
                 </p>
             </div>
         </div>
