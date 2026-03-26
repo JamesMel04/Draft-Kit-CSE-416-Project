@@ -2,6 +2,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from 'next/link'
 import PlayerSearch from "../components/ui/search";
+import HeaderUserMenu from "../components/ui/login-status";
+
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -35,7 +37,7 @@ export default function RootLayout({
                 <PlayerSearch/>
               </div>
               <div className="user">
-                <Link href="/profile">Username</Link>
+                <HeaderUserMenu />
               </div>
             </div>
           </header>

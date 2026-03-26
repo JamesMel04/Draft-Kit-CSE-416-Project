@@ -118,6 +118,21 @@ html, body {
   letter-spacing: 0.27px;
 }
 
+.searchbar {
+  display: flex;
+  align-items: center;
+}
+
+.searchbar form {
+  display: flex;
+  align-items: center;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+}
+
 .searchbar input {
   background: transparent;
   color: #ffffff;
@@ -159,3 +174,4 @@ html, body {
   overflow: auto;
   color: black;
 }
+

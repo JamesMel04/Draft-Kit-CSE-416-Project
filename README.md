@@ -34,9 +34,31 @@ To run compiled JavaScript deployment build
 npm start
 ```
 
-## Instructions to run Frontend
+Backend local URL:
 
 ```
+http://localhost:4000
+```
 
+## Instructions to run Frontend
+
+While located within `/frontend` directory:
+
+To install all dependencies upon initial use and/or whenever dependencies change
+
+```
+npm install
+```
+
+To run the local development server
+
+```
+npm run dev
+```
+
+Frontend local URL:
+
+```
+http://localhost:3000
 ```
 
