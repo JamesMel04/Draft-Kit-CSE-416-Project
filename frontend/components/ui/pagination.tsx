@@ -3,7 +3,7 @@
 * Referenced from: https://nextjs.org/learn/dashboard-app/adding-search-and-pagination
 * Note: PaginationMeta type might be overkill. Currently it has a limit, hasnext, hasprev, etc. But it may only need totalPages
 */
-"use client"
+export const dynamic="force dynamic"
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { PaginationMeta} from "@/_lib/types";
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
