@@ -2,7 +2,9 @@ import { getPlayers } from "@/_lib/api";
 import { PlayerGetParams, PlayerGetResponse } from "@/_lib/types";
 import PlayerTable from "@/components/players/player_table";
 import Pagination from "@/components/ui/pagination";
-export const dynamic="force-dynamic"
+import { Suspense } from "react";
+// Comment out for now, not sure it's needed
+// export const dynamic="force-dynamic"
 export default async function Player({searchParams} : {searchParams: PlayerGetParams}) {
     // Get search params to pass in
     searchParams = await searchParams;
@@ -10,9 +12,13 @@ export default async function Player({searchParams} : {searchParams: PlayerGetPa
 
     return(
         <div>
-            <Pagination pagination={response.pagination}/>
+            <Suspense fallback={<>...</>}>
+                <Pagination pagination={response.pagination}/>
+            </Suspense>
             <PlayerTable players={response.players}/>
-            <Pagination pagination={response.pagination}/>
+            <Suspense fallback={<>...</>}>
+                <Pagination pagination={response.pagination}/>
+            </Suspense>
         </div>
     );
 
