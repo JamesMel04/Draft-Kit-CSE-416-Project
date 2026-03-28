@@ -8,7 +8,7 @@ export const dynamic="force dynamic"
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { PaginationMeta} from "@/_lib/types";
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
-
+import {Suspense} from "react";
 export default function Pagination({pagination} : {pagination : PaginationMeta}) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -39,6 +39,7 @@ export default function Pagination({pagination} : {pagination : PaginationMeta})
     }
     
     return (
+        <Suspense fallback={<>...</>}>
         <div className="flex gap-2">
             <button onClick={handlePrev} disabled={currentPage === 1}>
                 <ArrowLeftIcon className={buttonClass} />
@@ -52,6 +53,7 @@ export default function Pagination({pagination} : {pagination : PaginationMeta})
                 <ArrowRightIcon className={buttonClass} />
             </button>
         </div>
+        </Suspense>
     )
 
 }
