@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import PlayerSearch from "../../components/ui/search";
 import HeaderUserMenu from "../../components/ui/login-status";
+import { Suspense } from 'react';
 
 export default function MainLayout({
   children,
@@ -17,7 +18,9 @@ export default function MainLayout({
 
         <div className="topbar-right">
           <div className="searchbar">
-            <PlayerSearch/>
+            <Suspense fallback={<>Search for player...</>}>
+              <PlayerSearch/>
+            </Suspense>
           </div>
           <div className="user">
             <HeaderUserMenu />
