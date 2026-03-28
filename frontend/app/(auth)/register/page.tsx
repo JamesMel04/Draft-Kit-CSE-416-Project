@@ -1,8 +1,11 @@
 "use client";
 
+import { BACKEND_URL } from "@/_lib/consts";
 import { useState } from "react";
 import Link from "next/link";
 import { validateEmail } from "@/utils/validation";
+import axios from "axios";
+import Router from "next/router";
 
 export default function RegisterPage() {
     const [email, setEmail] = useState("");
@@ -19,14 +22,24 @@ export default function RegisterPage() {
     };
 
     // Call when Create Account is pressed
-    const handleRegister = () => {
+    const handleRegister = async () => {
         const eError = validateEmail(email);
         const pError = validatePasswords();
         setEmailError(eError);
         setPasswordError(pError);
         if (eError || pError) return;
-        console.log("Create Account");
-    };
+            const user={email:email,pass:password};
+            const query=BACKEND_URL+"/create";
+            const status=await axios.post(query,user);
+            if(status.status=200){
+                console.log("Create Account");
+                Router.push("/");
+            }else{
+                console.log(status.data.error);
+                return -1;
+            }
+        };
+        
 
     return (
         <div className="min-h-screen bg-linear-to-b from-blue-900 to-emerald-700 flex items-center justify-center">
