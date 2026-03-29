@@ -25,17 +25,18 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 12px;
   line-height: 1.45;
+  margin: 0;
+  overflow: hidden;
 }
 
 
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html, body {
   height: 100%;
+  overflow: hidden;
 }
 
 /* Layout container */
@@ -45,7 +46,9 @@ html, body {
   grid-template-columns: 160px 1fr;
   grid-template-rows: 50px minmax(0, 1fr);
 
-  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
 }
 
 /* Sidebar */
@@ -118,6 +121,21 @@ html, body {
   letter-spacing: 0.27px;
 }
 
+.searchbar {
+  display: flex;
+  align-items: center;
+}
+
+.searchbar form {
+  display: flex;
+  align-items: center;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+}
+
 .searchbar input {
   background: transparent;
   color: #ffffff;
@@ -144,8 +162,12 @@ html, body {
   font-size: 0.72rem;
 }
 
+.user a {
+  white-space: nowrap;
+}
+
 .user a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 /* Page Content */
@@ -159,3 +181,4 @@ html, body {
   overflow: auto;
   color: black;
 }
+

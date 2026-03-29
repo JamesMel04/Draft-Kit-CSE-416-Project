@@ -1,12 +1,14 @@
 import { getPlayer } from "@/_lib/api";
-import PlayerCard from "@/components/player/player_card";
+import PlayerCard from "@/components/players/player_card";
+
 
 export default async function PlayerView({
     params
 } : {
-    params : Promise<{ id : string }>
+    params : { id : string }
 }) {
-    const {id} = await params;
+    const {id} = (await params);
+    console.log(`ID is ${id}`);
     const player = (await getPlayer(id));
     // console.log(id);
     return(
@@ -14,4 +16,5 @@ export default async function PlayerView({
             <PlayerCard player={player}/>
         </div>
     );
+
 }
