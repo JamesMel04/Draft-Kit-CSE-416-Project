@@ -64,4 +64,110 @@ export type PlayerGetResponse = {
     sort: string,
     asc: boolean
   };
-}
+};
+
+export type EvaluationMeta = {
+  source: "backend" | "fallback";
+  provider?: string;
+  generatedAt?: string;
+  notes?: string;
+};
+
+export type EvaluatedPlayer = {
+  id: string;
+  name: string;
+  team: string;
+  positions: string[];
+  suggestedValue: number;
+  evaluation: {
+    score: number;
+    tier: string;
+    confidence: number;
+    summary?: string;
+  };
+};
+
+export type EvaluatedPlayerListResponse = {
+  players: EvaluatedPlayer[];
+  pagination: PaginationMeta;
+  sorting: {
+    sort: string;
+    asc: boolean;
+  };
+  meta: EvaluationMeta;
+};
+
+export type EvaluationPlayerFilters = {
+  playerIds?: string[];
+  positions?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  alreadyTakenIds?: string[];
+  name?: string;
+  sort?: string;
+  asc?: boolean;
+  page?: number;
+  limit?: number;
+};
+
+export type EvaluatedDraftSlot = {
+  position: string;
+  player: EvaluatedPlayer | null;
+};
+
+export type EvaluatedDraftResponse = {
+  draftId: string;
+  slots: EvaluatedDraftSlot[];
+  totals: {
+    value: number;
+    score: number;
+  };
+  meta: EvaluationMeta;
+};
+
+export type EvaluatedDraftValue = {
+  draftId: string;
+  value: number;
+};
+
+export type EvaluatedDraftListResponse = {
+  drafts: EvaluatedDraftValue[];
+  meta: EvaluationMeta;
+};
+
+export type SavedDraftSummary = {
+  draftId: string;
+  name: string;
+  userId: string;
+  updatedAt: string;
+};
+
+export type SavedDraftListResponse = {
+  drafts: SavedDraftSummary[];
+};
+
+export type Position =
+  | "C"
+  | "1B"
+  | "2B"
+  | "3B"
+  | "SS"
+  | "CI"
+  | "MI"
+  | "OF1"
+  | "OF2"
+  | "OF3"
+  | "OF4"
+  | "OF5"
+  | "UTIL"
+  | "P1"
+  | "P2"
+  | "P3"
+  | "P4"
+  | "P5"
+  | "P6"
+  | "P7"
+  | "P8"
+  | "P9";
+
+export type SearchFilterPosition = "C" | "1B" | "2B" | "3B" | "SS" | "OF" | "P" | "UTIL";

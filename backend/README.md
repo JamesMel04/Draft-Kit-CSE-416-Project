@@ -20,8 +20,8 @@ All requests and responses use **JSON**.
 | GET    | `/players/:id/notes` | Get notes for a player  |
 | POST   | `/players/:id/notes` | Add a note to a player  |
 | GET    | `/compare`           | Compare two players     |
-| GET    | `/draft/:id`         | Get draft data          |
-| POST   | `/draft/:id/player`  | Add a player to a draft |
+| GET    | `/drafts/:id`         | Get draft data          |
+| POST   | `/drafts/:id/player`  | Add a player to a draft |
 
 ---
 
@@ -180,14 +180,14 @@ GET /compare?playerId1=player1&playerId2=player2
 
 # Get Draft Data
 
-**GET** `/draft/:id`
+**GET** `/drafts/:id`
 
 Returns draft information.
 
 ### Example Request
 
 ```
-GET /draft/draft1
+GET /drafts/draft1
 ```
 
 ### Example Response
@@ -208,7 +208,7 @@ GET /draft/draft1
 
 # Add Player To Draft
 
-**POST** `/draft/:id/player`
+**POST** `/drafts/:id/player`
 
 Adds a player to a draft.
 
