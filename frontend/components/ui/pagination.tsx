@@ -8,12 +8,37 @@ import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { PaginationMeta} from "@/_lib/types";
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 
-export default function Pagination({pagination} : {pagination : PaginationMeta}) {
+type UrlPaginationProps = {
+    pagination: PaginationMeta;
+    currentPage?: never;
+    totalPages?: never;
+    onNext?: never;
+    onPrev?: never;
+    disabled?: never;
+    total?: never;
+};
+
+type ControlledPaginationProps = {
+    pagination?: never;
+    currentPage: number;
+    totalPages: number;
+    onNext: () => void;
+    onPrev: () => void;
+    disabled?: boolean;
+    total?: number;
+};
+
+type PaginationProps = UrlPaginationProps | ControlledPaginationProps;
+
+export default function Pagination(props: PaginationProps) {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const router = useRouter();
-    const currentPage = Number(searchParams.get('page')) || 1;
-    const totalPages = pagination.totalPages;
+    const isUrlMode = !!props.pagination;
+    const currentPage = isUrlMode ? (Number(searchParams.get('page')) || 1) : props.currentPage;
+    const totalPages = isUrlMode ? props.pagination.totalPages : props.totalPages;
+    const total = isUrlMode ? props.pagination.total : props.total;
+    const disabled = !isUrlMode && !!props.disabled;
 
     const buttonClass = "h-5 w-5";
 
@@ -25,6 +50,11 @@ export default function Pagination({pagination} : {pagination : PaginationMeta})
 
     function handleNext() {
         if(currentPage < totalPages) {
+            if (!isUrlMode) {
+                props.onNext();
+                return;
+            }
+
             const url = createPageURL(currentPage+1);
             router.replace(url);
         }
@@ -32,6 +62,11 @@ export default function Pagination({pagination} : {pagination : PaginationMeta})
 
     function handlePrev() {
         if(currentPage > 1) {
+            if (!isUrlMode) {
+                props.onPrev();
+                return;
+            }
+
             const url = createPageURL(currentPage-1);
             router.replace(url);
         }
@@ -39,15 +74,16 @@ export default function Pagination({pagination} : {pagination : PaginationMeta})
     
     return (
         <div className="flex gap-2">
-            <button onClick={handlePrev} disabled={currentPage === 1}>
+            <button onClick={handlePrev} disabled={currentPage === 1 || disabled}>
                 <ArrowLeftIcon className={buttonClass} />
             </button>
 
             <span>
                 Page {currentPage} of {totalPages}
+                {typeof total === "number" ? ` | ${total} total` : ""}
             </span>
 
-            <button onClick={handleNext} disabled={currentPage === totalPages}>
+            <button onClick={handleNext} disabled={currentPage === totalPages || disabled}>
                 <ArrowRightIcon className={buttonClass} />
             </button>
         </div>
