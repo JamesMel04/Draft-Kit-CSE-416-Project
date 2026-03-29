@@ -5,7 +5,7 @@ import path from 'path';
 
 import playersRouter from '@routes/players';
 import compareRouter from '@routes/compare';
-import draftRouter from '@routes/draft';
+import draftsRouter from '@routes/drafts';
 
 dotenv.config();
 
@@ -23,7 +23,7 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use('/players', playersRouter);
 app.use('/compare', compareRouter);
-app.use('/draft', draftRouter);
+app.use('/drafts', draftsRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
