@@ -1,14 +1,42 @@
 /* This file should generally match the types file for the server */
+export type PlayerID = string;
+export type DraftID = string;
+export type Position =
+  | "C"
+  | "1B"
+  | "2B"
+  | "3B"
+  | "SS"
+  | "CI"
+  | "MI"
+  | "OF1"
+  | "OF2"
+  | "OF3"
+  | "OF4"
+  | "OF5"
+  | "UTIL"
+  | "P1"
+  | "P2"
+  | "P3"
+  | "P4"
+  | "P5"
+  | "P6"
+  | "P7"
+  | "P8"
+  | "P9";
+
+export type SearchFilterPosition = "C" | "1B" | "2B" | "3B" | "SS" | "OF" | "P" | "UTIL";
+
 export type PlayerStats = {
   seasons: number[];
   hitter: Record<string, number>;
 };
 
 export type PlayerData = {
-  id: string;
+  id: PlayerID;
   name: string;
   team: string;
-  positions: string[];
+  positions: Position[];
   suggestedValue: number;
   stats: {
     projection: PlayerStats,
@@ -17,11 +45,44 @@ export type PlayerData = {
   };
 };
 
+export type PlayerEvaluation = {
+	id: PlayerID;
+	name: string;
+	team: string;
+	positions: Position[];
+	suggestedValue: number;
+	evaluation: {
+		score: number;
+		tier: string;
+		confidence: number;
+		summary: string;
+	};
+};
+
+export type DraftSlotEvaluation = {
+  position: Position;
+  player: PlayerEvaluation | null;
+};
+
 export type DraftData = {
-  id: string;
-  roster: {
-    [position: string]: PlayerData;
+  id: DraftID;
+  roster: Record<Position, PlayerID>;
+};
+
+export type DraftEvaluation = {
+  draftId: DraftID;
+  slots: DraftSlotEvaluation[];
+  totals: {
+    value: number;
+    score: number;
   };
+};
+
+export type EvaluationMeta = {
+  source: 'backend';
+  provider: string;
+  generatedAt: string;
+  notes: string;
 };
 
 export type LeagueData = {
@@ -66,29 +127,8 @@ export type PlayerGetResponse = {
   };
 };
 
-export type EvaluationMeta = {
-  source: "backend" | "fallback";
-  provider?: string;
-  generatedAt?: string;
-  notes?: string;
-};
-
-export type EvaluatedPlayer = {
-  id: string;
-  name: string;
-  team: string;
-  positions: string[];
-  suggestedValue: number;
-  evaluation: {
-    score: number;
-    tier: string;
-    confidence: number;
-    summary?: string;
-  };
-};
-
-export type EvaluatedPlayerListResponse = {
-  players: EvaluatedPlayer[];
+export type PlayerEvaluationGetResponse = {
+  players: PlayerEvaluation[];
   pagination: PaginationMeta;
   sorting: {
     sort: string;
@@ -97,12 +137,12 @@ export type EvaluatedPlayerListResponse = {
   meta: EvaluationMeta;
 };
 
-export type EvaluationPlayerFilters = {
-  playerIds?: string[];
-  positions?: string[];
+export type PlayerEvaluationFilters = {
+  playerIds?: PlayerID[];
+  positions?: Position[];
   minPrice?: number;
   maxPrice?: number;
-  alreadyTakenIds?: string[];
+  alreadyTakenIds?: PlayerID[];
   name?: string;
   sort?: string;
   asc?: boolean;
@@ -110,33 +150,18 @@ export type EvaluationPlayerFilters = {
   limit?: number;
 };
 
-export type EvaluatedDraftSlot = {
-  position: string;
-  player: EvaluatedPlayer | null;
-};
-
-export type EvaluatedDraftResponse = {
-  draftId: string;
-  slots: EvaluatedDraftSlot[];
-  totals: {
-    value: number;
-    score: number;
-  };
+export type DraftGetResponse = {
+  drafts: DraftData[];
   meta: EvaluationMeta;
 };
 
-export type EvaluatedDraftValue = {
-  draftId: string;
-  value: number;
-};
-
-export type EvaluatedDraftListResponse = {
-  drafts: EvaluatedDraftValue[];
+export type DraftEvaluationGetResponse = {
+  drafts: DraftEvaluation[];
   meta: EvaluationMeta;
 };
 
 export type SavedDraftSummary = {
-  draftId: string;
+  draftId: DraftID;
   name: string;
   userId: string;
   updatedAt: string;
@@ -145,29 +170,3 @@ export type SavedDraftSummary = {
 export type SavedDraftListResponse = {
   drafts: SavedDraftSummary[];
 };
-
-export type Position =
-  | "C"
-  | "1B"
-  | "2B"
-  | "3B"
-  | "SS"
-  | "CI"
-  | "MI"
-  | "OF1"
-  | "OF2"
-  | "OF3"
-  | "OF4"
-  | "OF5"
-  | "UTIL"
-  | "P1"
-  | "P2"
-  | "P3"
-  | "P4"
-  | "P5"
-  | "P6"
-  | "P7"
-  | "P8"
-  | "P9";
-
-export type SearchFilterPosition = "C" | "1B" | "2B" | "3B" | "SS" | "OF" | "P" | "UTIL";

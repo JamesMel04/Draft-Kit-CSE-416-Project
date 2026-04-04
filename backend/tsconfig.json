@@ -12,13 +12,12 @@
     "skipLibCheck": true,
     "sourceMap": true,
 
-    "baseUrl": "./src",
     "paths": {
-      "@/*": ["./*"],
-      "@data/*": ["./data/*"],
-      "@routes/*": ["./routes/*"],
-      "@utils/*": ["./utils/*"],
-      "@types/*": ["./types/*"]
+      "@/*": ["./src/*"],
+      "@data/*": ["./src/data/*"],
+      "@routes/*": ["./src/routes/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@types/*": ["./src/types/*"]
     }
   }
 }

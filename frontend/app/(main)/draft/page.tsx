@@ -2,7 +2,7 @@
 
 import { getEvaluatedPlayers } from "@/_lib/api";
 import { allPositions, allSearchFilterPositions } from "@/_lib/consts";
-import { EvaluatedPlayer, Position } from "@/_lib/types";
+import { PlayerEvaluation, Position } from "@/_lib/types";
 import PlayerEvaluationPanel from "@/components/players/player_evaluation_panel";
 import { useEffect, useMemo, useState } from "react";
 
@@ -106,7 +106,7 @@ export default function Draft() {
   const [menuCell, setMenuCell] = useState<CellRef | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("hitters");
-  const [selectedEvaluation, setSelectedEvaluation] = useState<EvaluatedPlayer | null>(null);
+  const [selectedEvaluation, setSelectedEvaluation] = useState<PlayerEvaluation | null>(null);
   const [evaluationSource, setEvaluationSource] = useState<"backend" | "fallback" | null>(null);
   const [evaluationLoading, setEvaluationLoading] = useState(false);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
@@ -251,20 +251,20 @@ export default function Draft() {
     return taken;
   }, [teams, allPositions, rosterPlayerIds]);
 
-  const getOpenCompatibleSlots = (team: TeamName, player: EvaluatedPlayer): Position[] => {
+  const getOpenCompatibleSlots = (team: TeamName, player: PlayerEvaluation): Position[] => {
     return allPositions.filter(
       (pos) => !roster[team][pos] && canPlayerFitSlot(player.positions, pos)
     );
   };
 
 
-  const handleAssignTeamChange = (playerId: string, team: TeamName, player: EvaluatedPlayer) => {
+  const handleAssignTeamChange = (playerId: string, team: TeamName, player: PlayerEvaluation) => {
     setAssignTeamByPlayer((prev) => ({ ...prev, [playerId]: team }));
     const openSlots = getOpenCompatibleSlots(team, player);
     setAssignSlotByPlayer((prev) => ({ ...prev, [playerId]: openSlots[0] }));
   };
 
-  const handleAddFromSearch = (player: EvaluatedPlayer) => {
+  const handleAddFromSearch = (player: PlayerEvaluation) => {
     const team = assignTeamByPlayer[player.id] ?? teams[0];
     const openSlots = getOpenCompatibleSlots(team, player);
     const slot = assignSlotByPlayer[player.id] ?? openSlots[0];
@@ -320,23 +320,23 @@ export default function Draft() {
   const availablePlayerColumns = [
     {
       header: "Player",
-      renderCell: (player: EvaluatedPlayer) => <span className="font-semibold">{player.name}</span>,
+      renderCell: (player: PlayerEvaluation) => <span className="font-semibold">{player.name}</span>,
     },
     {
       header: "Pos",
-      renderCell: (player: EvaluatedPlayer) => player.positions.join(", "),
+      renderCell: (player: PlayerEvaluation) => player.positions.join(", "),
     },
     {
       header: "Value",
-      renderCell: (player: EvaluatedPlayer) => `$${player.suggestedValue}`,
+      renderCell: (player: PlayerEvaluation) => `$${player.suggestedValue}`,
     },
     {
       header: "Eval",
-      renderCell: (player: EvaluatedPlayer) => `${player.evaluation.score} (${player.evaluation.tier})`,
+      renderCell: (player: PlayerEvaluation) => `${player.evaluation.score} (${player.evaluation.tier})`,
     },
     {
       header: "Assign Team",
-      renderCell: (player: EvaluatedPlayer) => {
+      renderCell: (player: PlayerEvaluation) => {
         const selectedTeam = assignTeamByPlayer[player.id] ?? teams[0];
         return (
           <select
@@ -355,7 +355,7 @@ export default function Draft() {
     },
     {
       header: "Assign Slot",
-      renderCell: (player: EvaluatedPlayer) => {
+      renderCell: (player: PlayerEvaluation) => {
         const selectedTeam = assignTeamByPlayer[player.id] ?? teams[0];
         const openSlots = getOpenCompatibleSlots(selectedTeam, player);
         const selectedSlot =
@@ -390,7 +390,7 @@ export default function Draft() {
     },
     {
       header: "Action",
-      renderCell: (player: EvaluatedPlayer) => {
+      renderCell: (player: PlayerEvaluation) => {
         const selectedTeam = assignTeamByPlayer[player.id] ?? teams[0];
         const openSlots = getOpenCompatibleSlots(selectedTeam, player);
         const isTaken = takenPlayerIds.has(player.id);
