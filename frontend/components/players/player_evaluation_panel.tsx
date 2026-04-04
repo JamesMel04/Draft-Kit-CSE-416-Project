@@ -1,13 +1,13 @@
 "use client";
 
 import { getEvaluatedPlayers } from "@/_lib/api";
-import { EvaluatedPlayer, EvaluationPlayerFilters, EvaluationMeta, PaginationMeta } from "@/_lib/types";
+import { PlayerEvaluation, PlayerEvaluationFilters, EvaluationMeta, PaginationMeta, Position } from "@/_lib/types";
 import Pagination from "@/components/ui/pagination";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 
 type PlayerEvaluationColumn = {
   header: string;
-  renderCell: (player: EvaluatedPlayer) => ReactNode;
+  renderCell: (player: PlayerEvaluation) => ReactNode;
 };
 
 type PlayerEvaluationPanelProps = {
@@ -22,9 +22,9 @@ type PlayerEvaluationPanelProps = {
   defaultAsc?: boolean;
   initialSearchOnMount?: boolean;
   hiddenPlayerIds?: string[];
-  buildFilters?: (base: EvaluationPlayerFilters) => EvaluationPlayerFilters;
+  buildFilters?: (base: PlayerEvaluationFilters) => PlayerEvaluationFilters;
   onResultsChange?: (payload: {
-    players: EvaluatedPlayer[];
+    players: PlayerEvaluation[];
     pagination: PaginationMeta | null;
     meta: EvaluationMeta | null;
   }) => void;
@@ -51,8 +51,8 @@ export default function PlayerEvaluationPanel({
   const [nameInput, setNameInput] = useState("");
   const [minPriceInput, setMinPriceInput] = useState("");
   const [maxPriceInput, setMaxPriceInput] = useState("");
-  const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
-  const [players, setPlayers] = useState<EvaluatedPlayer[]>([]);
+  const [selectedPositions, setSelectedPositions] = useState<Position[]>([]);
+  const [players, setPlayers] = useState<PlayerEvaluation[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [page, setPage] = useState(1);
 
@@ -67,7 +67,7 @@ export default function PlayerEvaluationPanel({
       setLoading(true);
       setError(null);
 
-      const baseFilters: EvaluationPlayerFilters = {
+      const baseFilters: PlayerEvaluationFilters = {
         name: nameInput || undefined,
         positions: selectedPositions,
         minPrice: minPriceInput ? Number(minPriceInput) : undefined,
@@ -97,7 +97,7 @@ export default function PlayerEvaluationPanel({
     }
   };
 
-  const togglePosition = (position: string) => {
+  const togglePosition = (position: Position) => {
     setSelectedPositions((prev) =>
       prev.includes(position) ? prev.filter((p) => p !== position) : [...prev, position]
     );
@@ -162,7 +162,8 @@ export default function PlayerEvaluationPanel({
         <div className="mb-2 text-xs font-semibold uppercase text-slate-600">Positions</div>
         <div className="flex flex-wrap gap-2">
           {positionOptions.map((pos) => {
-            const selected = selectedPositions.includes(pos);
+            const position = pos as Position;
+            const selected = selectedPositions.includes(position);
             return (
               <label
                 key={pos}
@@ -175,7 +176,7 @@ export default function PlayerEvaluationPanel({
                 <input
                   type="checkbox"
                   checked={selected}
-                  onChange={() => togglePosition(pos)}
+                  onChange={() => togglePosition(position)}
                   className="sr-only"
                 />
                 {pos}

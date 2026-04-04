@@ -2,7 +2,7 @@
 
 import { getEvaluatedDrafts, getSavedDrafts } from "@/_lib/api";
 import { allSearchFilterPositions } from "@/_lib/consts";
-import { EvaluatedDraftValue, EvaluatedPlayer, EvaluationMeta, SavedDraftSummary } from "@/_lib/types";
+import { DraftEvaluation, PlayerEvaluation, EvaluationMeta, SavedDraftSummary } from "@/_lib/types";
 import PlayerEvaluationPanel from "@/components/players/player_evaluation_panel";
 import { useEffect, useMemo, useState } from "react";
 
@@ -12,8 +12,8 @@ export default function Evaluation() {
     const [savedDraftsLoading, setSavedDraftsLoading] = useState(false);
     const [savedDraftsError, setSavedDraftsError] = useState<string | null>(null);
 
-    const [playerResults, setPlayerResults] = useState<EvaluatedPlayer[]>([]);
-    const [draftResults, setDraftResults] = useState<EvaluatedDraftValue[]>([]);
+    const [playerResults, setPlayerResults] = useState<PlayerEvaluation[]>([]);
+    const [draftResults, setDraftResults] = useState<DraftEvaluation[]>([]);
 
     const [draftMeta, setDraftMeta] = useState<EvaluationMeta | null>(null);
 
@@ -70,7 +70,7 @@ export default function Evaluation() {
 
     const bestDraft = useMemo(() => {
         if (!draftResults.length) return null;
-        return [...draftResults].sort((a, b) => b.value - a.value)[0];
+        return [...draftResults].sort((a, b) => b.totals.value - a.totals.value)[0];
     }, [draftResults]);
 
     const bestPlayer = useMemo(() => {
@@ -81,27 +81,27 @@ export default function Evaluation() {
     const playerColumns = [
         {
             header: "Player",
-            renderCell: (player: EvaluatedPlayer) => <span className="font-semibold">{player.name}</span>,
+            renderCell: (player: PlayerEvaluation) => <span className="font-semibold">{player.name}</span>,
         },
         {
             header: "Team",
-            renderCell: (player: EvaluatedPlayer) => player.team,
+            renderCell: (player: PlayerEvaluation) => player.team,
         },
         {
             header: "Pos",
-            renderCell: (player: EvaluatedPlayer) => player.positions.join(", "),
+            renderCell: (player: PlayerEvaluation) => player.positions.join(", "),
         },
         {
             header: "Value",
-            renderCell: (player: EvaluatedPlayer) => `$${player.suggestedValue}`,
+            renderCell: (player: PlayerEvaluation) => `$${player.suggestedValue}`,
         },
         {
             header: "Eval Score",
-            renderCell: (player: EvaluatedPlayer) => player.evaluation.score,
+            renderCell: (player: PlayerEvaluation) => player.evaluation.score,
         },
         {
             header: "Tier",
-            renderCell: (player: EvaluatedPlayer) => player.evaluation.tier,
+            renderCell: (player: PlayerEvaluation) => player.evaluation.tier,
         },
     ];
 
@@ -195,7 +195,7 @@ export default function Evaluation() {
 
                     {bestDraft && (
                         <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
-                            Best draft: <span className="font-semibold">{bestDraft.draftId}</span> | Value {bestDraft.value}
+                            Best draft: <span className="font-semibold">{bestDraft.draftId}</span> | Value {bestDraft.totals.value}
                         </div>
                     )}
 
@@ -218,7 +218,7 @@ export default function Evaluation() {
                                     draftResults.map((draft) => (
                                         <tr key={draft.draftId} className="border-t border-slate-200">
                                             <td className="px-3 py-2 font-semibold">{draft.draftId}</td>
-                                            <td className="px-3 py-2">{draft.value}</td>
+                                            <td className="px-3 py-2">{draft.totals.value}</td>
                                         </tr>
                                     ))
                                 )}
