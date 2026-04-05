@@ -1,10 +1,10 @@
 # Draft-Kit-CSE-416-Project
 
-Draft Kit Frontend: [https://draft-kit-cse-416-project.onrender.com/](https://draft-kit-cse-416-project.onrender.com/)
+Draft Kit Frontend: [https://draft-kit-cse-416-project.onrender.com/](https://draft-kit-frontend-cse-416-project.onrender.com)
 
-Draft Kit Backend: [https://draft-kit-cse-416-project-1.onrender.com/](https://draft-kit-cse-416-project-1.onrender.com/)
+Draft Kit Backend: [https://draft-kit-cse-416-project-1.onrender.com/](https://draft-kit-backend-cse-416-project.onrender.com)
 
-API URL: [https://api-cse-416-project.onrender.com/](https://api-cse-416-project.onrender.com/)
+API URL: [https://api-cse-416-project.onrender.com/](https://api-cse-416-project-5a0b.onrender.com)
 
 ## Instructions to run Backend
 
