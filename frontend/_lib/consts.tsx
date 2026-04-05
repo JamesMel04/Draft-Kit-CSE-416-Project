@@ -1,6 +1,6 @@
 import type { Position, SearchFilterPosition } from "./types";
 
-export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://draft-kit-cse-416-project-1.onrender.com";
+export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://draft-kit-backend-cse-416-project.onrender.com";
 
 export const allPositions: Position[] = [
 	"C",
