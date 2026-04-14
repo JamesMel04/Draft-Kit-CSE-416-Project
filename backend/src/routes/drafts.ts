@@ -4,21 +4,22 @@ import { testDraftDataSet } from '@data/test-data';
 const router = Router();
 
 router.get('/saved', async (req: Request, res: Response) => {
-  // Placeholder for fetching saved drafts for a user. In a real implementation, you would fetch this data from a database based on the authenticated user's ID.
-  // const userId = (req.query.userId as string) || 'demo-user';
+  try {
+    const userIdHeader = req.header('x-user-id');
+    const userIdQuery = typeof req.query.userId === 'string' ? req.query.userId : undefined;
+    const userId = userIdHeader || userIdQuery || 'anonymous-user';
 
-  // try {
-  //   const drafts = testDraftDataSet.map((draft, index) => ({
-  //     draftId: draft.id,
-  //     name: `Saved Draft ${index + 1}`,
-  //     userId,
-  //     updatedAt: new Date(Date.now() - index * 3600 * 1000).toISOString(),
-  //   }));
+    const drafts = testDraftDataSet.slice(0, 5).map((draft, index) => ({
+      draftId: draft.id,
+      name: `Saved Draft ${index + 1}`,
+      userId,
+      updatedAt: new Date(Date.now() - index * 3600 * 1000).toISOString(),
+    }));
 
-  //   res.json({ drafts });
-  // } catch (error) {
+    res.json({ drafts });
+  } catch (error) {
     res.status(500).json({ error: 'Failed to fetch saved drafts' });
-  // }
+  }
 });
 
 router.get('/:id', async (req: Request, res: Response) => {

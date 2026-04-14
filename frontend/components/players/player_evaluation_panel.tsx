@@ -1,7 +1,7 @@
 "use client";
 
 import { getEvaluatedPlayers } from "@/_lib/api";
-import { PlayerEvaluation, PlayerEvaluationFilters, EvaluationMeta, PaginationMeta, Position } from "@/_lib/types";
+import { PlayerEvaluation, PlayerEvaluationQueryParams, EvaluationMeta, PaginationMeta, Position } from "@/_lib/types";
 import Pagination from "@/components/ui/pagination";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 
@@ -22,7 +22,7 @@ type PlayerEvaluationPanelProps = {
   defaultAsc?: boolean;
   initialSearchOnMount?: boolean;
   hiddenPlayerIds?: string[];
-  buildFilters?: (base: PlayerEvaluationFilters) => PlayerEvaluationFilters;
+  buildFilters?: (base: PlayerEvaluationQueryParams) => PlayerEvaluationQueryParams;
   onResultsChange?: (payload: {
     players: PlayerEvaluation[];
     pagination: PaginationMeta | null;
@@ -67,7 +67,7 @@ export default function PlayerEvaluationPanel({
       setLoading(true);
       setError(null);
 
-      const baseFilters: PlayerEvaluationFilters = {
+      const baseFilters: PlayerEvaluationQueryParams = {
         name: nameInput || undefined,
         positions: selectedPositions,
         minPrice: minPriceInput ? Number(minPriceInput) : undefined,

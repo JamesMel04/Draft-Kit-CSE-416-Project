@@ -5,8 +5,10 @@ import { allSearchFilterPositions } from "@/_lib/consts";
 import { DraftEvaluation, PlayerEvaluation, EvaluationMeta, SavedDraftSummary } from "@/_lib/types";
 import PlayerEvaluationPanel from "@/components/players/player_evaluation_panel";
 import { useEffect, useMemo, useState } from "react";
+import { useUser } from "@auth0/nextjs-auth0/client";
 
 export default function Evaluation() {
+    const { user } = useUser();
     const [savedDrafts, setSavedDrafts] = useState<SavedDraftSummary[]>([]);
     const [selectedDraftIds, setSelectedDraftIds] = useState<string[]>([]);
     const [savedDraftsLoading, setSavedDraftsLoading] = useState(false);
@@ -25,7 +27,12 @@ export default function Evaluation() {
             try {
                 setSavedDraftsLoading(true);
                 setSavedDraftsError(null);
-                const drafts = await getSavedDrafts("demo-user");
+                if (!user?.sub) {
+                    setSavedDrafts([]);
+                    return;
+                }
+
+                const drafts = await getSavedDrafts(user.sub);
                 setSavedDrafts(drafts);
             } catch {
                 setSavedDraftsError("Failed to load saved drafts.");
@@ -35,7 +42,7 @@ export default function Evaluation() {
         };
 
         loadSavedDrafts();
-    }, []);
+    }, [user?.sub]);
 
     const runDraftEvaluation = async () => {
         const ids = Array.from(new Set(selectedDraftIds));

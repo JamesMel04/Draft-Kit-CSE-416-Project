@@ -1,14 +1,16 @@
 /* ONLY ADD SERVER FUNCTIONS HERE, NEVER DIRECTLY CALL fetch() */
 import { BACKEND_URL } from "./consts";
 import {
-    DraftEvaluationGetResponse,
-    PlayerEvaluationFilters,
-    PlayerEvaluationGetResponse,
+    CleanQueryParams,
+    DraftEvaluationResponse,
+    PlayerEvaluationQueryParams,
+    PlayerEvaluationResponse,
     PaginationMeta,
     PlayerData,
-    PlayerGetParams,
+    PlayerQueryParams,
     PlayerGetResponse,
-    SavedDraftListResponse,
+    QueryParams,
+    SavedDraftsResponse,
     SavedDraftSummary,
     DraftID,
     PlayerID,
@@ -21,6 +23,12 @@ import axios from "axios";
 const api = axios.create({
     baseURL: `${BACKEND_URL}`,
 });
+
+function cleanParams(params: QueryParams): CleanQueryParams {
+    return Object.fromEntries(
+        Object.entries(params).filter(([, value]) => value !== undefined)
+    ) as CleanQueryParams;
+}
 
 function normalizePagination(
     raw: PaginationMeta | undefined,
@@ -57,19 +65,11 @@ export async function getPlayer(id : PlayerID) : Promise<PlayerData> {
 /*
 Get players on specific page, based off parameters specified in backend documentation (README)
 */
-export async function getPlayers(params : PlayerGetParams) : Promise<PlayerGetResponse> {
+export async function getPlayers(params : PlayerQueryParams) : Promise<PlayerGetResponse> {
     try {
-        const query = new URLSearchParams();
-        let k: keyof typeof params;
-        for (k in params) {
-            const v = params[k];
-            if (v !== null && v !== undefined) query.append(k, v.toString());
-        }
-
-        // Now query to the backend
-        const url = query?.toString() ? `/players?${query.toString()}` : `/players`;
-        console.log(`Querying ${url}`);
-        const res = (await api.get<PlayerGetResponse>(url)).data;
+        const res = (await api.get<PlayerGetResponse>(`/players`, {
+            params: cleanParams(params),
+        })).data;
 
         return res;
     } catch (err) {
@@ -78,25 +78,25 @@ export async function getPlayers(params : PlayerGetParams) : Promise<PlayerGetRe
     }
 }
 
-export async function getEvaluatedPlayers(filters: PlayerEvaluationFilters = {}): Promise<PlayerEvaluationGetResponse> {
+export async function getEvaluatedPlayers(filters: PlayerEvaluationQueryParams = {}): Promise<PlayerEvaluationResponse> {
     const requestedPage = filters.page ?? 1;
     const requestedLimit = filters.limit ?? 25;
     const queryPositions = filters.positions?.length ? Array.from(new Set(filters.positions.flatMap((pos) => (pos.toUpperCase() === "P" ? ["P", "SP", "RP"] : [pos])))) : undefined;
 
-    const query = new URLSearchParams();
-    if (filters.playerIds?.length) query.append("playerIds", filters.playerIds.join(","));
-    if (queryPositions?.length) query.append("positions", queryPositions.join(","));
-    if (filters.alreadyTakenIds?.length) query.append("alreadyTakenIds", filters.alreadyTakenIds.join(","));
-    if (filters.minPrice !== undefined) query.append("minPrice", filters.minPrice.toString());
-    if (filters.maxPrice !== undefined) query.append("maxPrice", filters.maxPrice.toString());
-    if (filters.name) query.append("name", filters.name);
-    if (filters.sort) query.append("sort", filters.sort);
-    if (filters.asc !== undefined) query.append("asc", filters.asc.toString());
-    if (filters.page !== undefined) query.append("page", filters.page.toString());
-    if (filters.limit !== undefined) query.append("limit", filters.limit.toString());
-
-    const url = query?.toString() ? `/evaluation/players?${query.toString()}` : `/evaluation/players`;
-    const res = (await api.get<PlayerEvaluationGetResponse>(url)).data;
+    const res = (await api.get<PlayerEvaluationResponse>(`/evaluation/players`, {
+        params: cleanParams({
+            playerIds: filters.playerIds?.length ? filters.playerIds.join(",") : undefined,
+            positions: queryPositions?.length ? queryPositions.join(",") : undefined,
+            alreadyTakenIds: filters.alreadyTakenIds?.length ? filters.alreadyTakenIds.join(",") : undefined,
+            minPrice: filters.minPrice,
+            maxPrice: filters.maxPrice,
+            name: filters.name,
+            sort: filters.sort,
+            asc: filters.asc,
+            page: filters.page,
+            limit: filters.limit,
+        }),
+    })).data;
 
     return {
         ...res,
@@ -110,12 +110,10 @@ export async function getEvaluatedPlayers(filters: PlayerEvaluationFilters = {})
     };
 }
 
-export async function getEvaluatedDrafts(draftIds: DraftID[]): Promise<DraftEvaluationGetResponse> {
-    const query = new URLSearchParams();
-    query.append("draftIds", draftIds.join(","));
-
-    const url = query?.toString() ? `/evaluation/drafts?${query.toString()}` : `/evaluation/drafts`;
-    const res = (await api.get<DraftEvaluationGetResponse>(url)).data;
+export async function getEvaluatedDrafts(draftIds: DraftID[]): Promise<DraftEvaluationResponse> {
+    const res = (await api.get<DraftEvaluationResponse>(`/evaluation/drafts`, {
+        params: { draftIds: draftIds.join(",") },
+    })).data;
 
     return {
         ...res,
@@ -128,13 +126,16 @@ export async function getEvaluatedDrafts(draftIds: DraftID[]): Promise<DraftEval
     };
 }
 
-export async function getSavedDrafts(userId: string): Promise<SavedDraftSummary[]> {
+export async function getSavedDrafts(userId?: string): Promise<SavedDraftSummary[]> {
     try {
-        const query = new URLSearchParams();
-        if (userId) query.append("userId", userId);
+        if (!userId) return [];
 
-        const url = query?.toString() ? `/drafts/saved?${query.toString()}` : "/drafts/saved";
-        const res = (await api.get<SavedDraftListResponse>(url)).data;
+        const res = (await api.get<SavedDraftsResponse>("/drafts/saved", {
+            params: { userId },
+            headers: {
+                "x-user-id": userId,
+            },
+        })).data;
         return res.drafts ?? [];
     } catch {
         return [];
