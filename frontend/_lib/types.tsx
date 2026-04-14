@@ -93,17 +93,6 @@ export type LeagueData = {
 };
 
 /*
-Type for backend player GET parameters. Should always match backend, update as needed
-*/
-export type PlayerGetParams = {
-  name?: string; // Name of player to filter
-  sort?: string; // Key to sort by
-  asc?: boolean; // Ascending or not
-  page?: number; // Current page
-  limit?: number; // Number of players per page
-}
-
-/*
 Type for pagination meta, returned by backend, update as needed
 */
 export type PaginationMeta = {
@@ -115,9 +104,18 @@ export type PaginationMeta = {
   hasPrev: boolean; // Previous page or not
 };
 
-/*
-Type of object that backend player request returns. update as needed
-*/
+export type QueryParams = Record<string, string | number | boolean | undefined>;
+
+export type CleanQueryParams = Record<string, string | number | boolean>;
+
+export type PlayerQueryParams = {
+  name?: string; // Name of player to filter
+  sort?: string; // Key to sort by
+  asc?: boolean; // Ascending or not
+  page?: number; // Current page
+  limit?: number; // Number of players per page
+};
+
 export type PlayerGetResponse = {
   players: PlayerData[];
   pagination: PaginationMeta;
@@ -127,7 +125,20 @@ export type PlayerGetResponse = {
   };
 };
 
-export type PlayerEvaluationGetResponse = {
+export type PlayerEvaluationQueryParams = {
+  name?: string;
+  sort?: string;
+  asc?: boolean;
+  page?: number;
+  limit?: number;
+  playerIds?: PlayerID[];
+  positions?: Position[];
+  minPrice?: number;
+  maxPrice?: number;
+  alreadyTakenIds?: PlayerID[];
+};
+
+export type PlayerEvaluationResponse = {
   players: PlayerEvaluation[];
   pagination: PaginationMeta;
   sorting: {
@@ -137,25 +148,12 @@ export type PlayerEvaluationGetResponse = {
   meta: EvaluationMeta;
 };
 
-export type PlayerEvaluationFilters = {
-  playerIds?: PlayerID[];
-  positions?: Position[];
-  minPrice?: number;
-  maxPrice?: number;
-  alreadyTakenIds?: PlayerID[];
-  name?: string;
-  sort?: string;
-  asc?: boolean;
-  page?: number;
-  limit?: number;
-};
-
 export type DraftGetResponse = {
   drafts: DraftData[];
   meta: EvaluationMeta;
 };
 
-export type DraftEvaluationGetResponse = {
+export type DraftEvaluationResponse = {
   drafts: DraftEvaluation[];
   meta: EvaluationMeta;
 };
@@ -167,6 +165,6 @@ export type SavedDraftSummary = {
   updatedAt: string;
 };
 
-export type SavedDraftListResponse = {
+export type SavedDraftsResponse = {
   drafts: SavedDraftSummary[];
 };
