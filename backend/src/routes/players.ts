@@ -6,7 +6,7 @@ import { isValidSortField, sortPlayers } from '@/utils/sorters';
 import { buildPagination } from '@/utils/pagination';
 
 const router = Router();
-const API_URL = process.env.API_URL || 'https://api-cse-416-project.onrender.com';
+const API_URL = process.env.API_URL;
 
 const api = axios.create({
   baseURL: API_URL,
