@@ -1,5 +1,6 @@
 export type PlayerID = string;
 export type DraftID = string;
+
 export type Position =
   | "C"
   | "1B"
@@ -97,16 +98,4 @@ export type LeagueData = {
   teams: {
     [teamManager: string]: DraftData;
   }
-};
-
-export type SortField = string;
-export type SortAsc = boolean;
-
-export type PaginationMeta = {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrev: boolean;
 };

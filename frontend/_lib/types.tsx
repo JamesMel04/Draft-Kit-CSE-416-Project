@@ -1,6 +1,7 @@
 /* This file should generally match the types file for the server */
 export type PlayerID = string;
 export type DraftID = string;
+
 export type Position =
   | "C"
   | "1B"
@@ -92,45 +93,24 @@ export type LeagueData = {
   }
 };
 
-/*
-Type for pagination meta, returned by backend, update as needed
-*/
-export type PaginationMeta = {
-  total: number; // Total number of players
-  page: number; // Current Page
-  limit: number; // Limit per page
-  totalPages: number; // Total number of pages
-  hasNext: boolean; // Next page or not
-  hasPrev: boolean; // Previous page or not
-};
+export type SortField = string;
+export type SortAsc = boolean;
 
 export type QueryParams = Record<string, string | number | boolean | undefined>;
 
 export type CleanQueryParams = Record<string, string | number | boolean>;
 
 export type PlayerQueryParams = {
-  name?: string; // Name of player to filter
-  sort?: string; // Key to sort by
-  asc?: boolean; // Ascending or not
-  page?: number; // Current page
-  limit?: number; // Number of players per page
+  name?: string; // Name of player to filter by (partial match)
 };
 
 export type PlayerGetResponse = {
   players: PlayerData[];
-  pagination: PaginationMeta;
-  sorting: {
-    sort: string,
-    asc: boolean
-  };
+  fallback?: boolean;
 };
 
 export type PlayerEvaluationQueryParams = {
   name?: string;
-  sort?: string;
-  asc?: boolean;
-  page?: number;
-  limit?: number;
   playerIds?: PlayerID[];
   positions?: Position[];
   minPrice?: number;
@@ -140,11 +120,6 @@ export type PlayerEvaluationQueryParams = {
 
 export type PlayerEvaluationResponse = {
   players: PlayerEvaluation[];
-  pagination: PaginationMeta;
-  sorting: {
-    sort: string;
-    asc: boolean;
-  };
   meta: EvaluationMeta;
 };
 
