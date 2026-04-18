@@ -2,17 +2,17 @@ import express, {Request, Response} from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import { optionalEnv } from './utils/env-reader';
 
 import playersRouter from '@routes/players';
 import compareRouter from '@routes/compare';
 import draftsRouter from '@routes/drafts';
-// import createRouter from '@routes/create';
 import evaluationRouter from '@routes/evaluation';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = optionalEnv('PORT', '4000');
 const PUBLIC_DIR = path.join(__dirname, '../public');
 
 app.use(cors());
@@ -26,7 +26,6 @@ app.get('/', (req: Request, res: Response) => {
 app.use('/players', playersRouter);
 app.use('/compare', compareRouter);
 app.use('/drafts', draftsRouter);
-// app.use('/create',createRouter);
 app.use('/evaluation', evaluationRouter);
 
 app.listen(PORT, () => {

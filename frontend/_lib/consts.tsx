@@ -1,7 +1,7 @@
 import type { Position, SearchFilterPosition } from "./types";
 import { optionalEnv } from "@/utils/env-reader";
 
-export const BACKEND_URL = optionalEnv("NEXT_PUBLIC_BACKEND_URL", "https://draft-kit-backend-cse-416-project.onrender.com");
+export const BACKEND_URL = optionalEnv('NEXT_PUBLIC_BACKEND_URL', 'https://draft-kit-backend-cse-416-project.onrender.com');
 
 export const allPositions: Position[] = [
 	"C",

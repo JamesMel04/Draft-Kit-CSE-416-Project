@@ -15,8 +15,7 @@ export default function PlayerSearch() {
     // console.log(`Name: ${name}`);
     const params = new URLSearchParams(searchParams);
     // console.log(`Pathname: ${pathname}`)
-    // If on /players, route to relative path, keeping sorting and ascension boolean intact
-    // While changing page to be 1 again
+    // If on /players, route to relative path and preserve sort state
     if(pathname == "/players") {
       if(name) {
         params.set('name', name);
@@ -24,8 +23,6 @@ export default function PlayerSearch() {
       else {
         params.delete('name');
       }
-      // Reset to page 1
-      params.delete('page');
       router.replace(`${pathname}?${params.toString()}`);
     }
     

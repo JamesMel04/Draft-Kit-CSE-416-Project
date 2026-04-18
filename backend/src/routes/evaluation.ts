@@ -1,76 +1,103 @@
 import { Router, Request, Response } from 'express';
-import axios from 'axios';
 import { PlayerEvaluation, EvaluationMeta, DraftEvaluation, Position, DraftData, PlayerID } from '@/types';
+import { getPlayerEvaluations, getPlayers } from '@/utils/api';
 import {
-	parseBoolean,
 	parseCsvQuery,
 	parseOptionalNumberQuery,
-	parsePositiveInt,
 	parseStringQuery
 } from '@/utils/parsers';
-import { buildPagination } from '@/utils/pagination';
 import { testDraftDataSet } from '../data/test-data';
 
 const router = Router();
-const API_URL = process.env.API_URL || 'https://api-cse-416-project.onrender.com';
 
-const api = axios.create({
-	baseURL: API_URL,
-	timeout: 5000,
-	headers: { 'Content-Type': 'application/json' }
-});
-
-function getEvaluationMeta(notes: string): EvaluationMeta {
+function getEvaluationMeta(provider: string, notes: string): EvaluationMeta {
 	return {
 		source: 'backend',
-		provider: 'external-evaluator',
+		provider,
 		generatedAt: new Date().toISOString(),
 		notes
 	};
 }
 
 router.get('/players', async (req: Request, res: Response) => {
-	const requestedSort = parseStringQuery(req.query.sort, 'suggestedValue');
-	const asc = parseBoolean(req.query.asc, false);
-	const page = parsePositiveInt(req.query.page, 1);
-	const limit = Math.min(parsePositiveInt(req.query.limit, 25), 100);
+	const playerIdSet = new Set(req.query.playerIds !== undefined ? parseCsvQuery(req.query.playerIds) : []);
+	const positionSet = new Set(req.query.positions !== undefined ? parseCsvQuery(req.query.positions) : []);
+	const alreadyTakenIdSet = new Set(req.query.alreadyTakenIds !== undefined ? parseCsvQuery(req.query.alreadyTakenIds) : []);
+
+	const minPrice = req.query.minPrice !== undefined ? parseOptionalNumberQuery(req.query.minPrice) : undefined;
+	const maxPrice = req.query.maxPrice !== undefined ? parseOptionalNumberQuery(req.query.maxPrice) : undefined;
+	const nameFilter = parseStringQuery(req.query.name, '');
 
 	try {
-		const apiQuery = new URLSearchParams();
-		if (req.query.playerIds !== undefined) apiQuery.append('playerIds', parseCsvQuery(req.query.playerIds).join(','));
-		if (req.query.positions !== undefined) apiQuery.append('positions', parseCsvQuery(req.query.positions).join(','));
-		if (req.query.alreadyTakenIds !== undefined) apiQuery.append('alreadyTakenIds', parseCsvQuery(req.query.alreadyTakenIds).join(','));
-		if (req.query.minPrice !== undefined) {
-			const minPrice = parseOptionalNumberQuery(req.query.minPrice);
-			if (minPrice !== undefined) apiQuery.append('minPrice', String(minPrice));
-		}
-		if (req.query.maxPrice !== undefined) {
-			const maxPrice = parseOptionalNumberQuery(req.query.maxPrice);
-			if (maxPrice !== undefined) apiQuery.append('maxPrice', String(maxPrice));
-		}
-		const name = parseStringQuery(req.query.name, '');
-		if (name) apiQuery.append('name', name);
-		if (req.query.sort !== undefined) apiQuery.append('sort', requestedSort);
-		if (req.query.asc !== undefined) apiQuery.append('asc', String(asc));
-
-		const apiUrl = apiQuery.toString() ? `/evaluation/players?${apiQuery.toString()}`: '/evaluation/players';
-
-		const { data } = await api.get<PlayerEvaluation[]>(apiUrl);
-		const evaluatedPlayers = data ?? [];
-
-		const pagination = buildPagination(evaluatedPlayers.length, page, limit);
-		const start = (pagination.page - 1) * pagination.limit;
-		const paginatedPlayers = evaluatedPlayers.slice(start, start + pagination.limit);
+		const evaluatedPlayers = await getPlayerEvaluations({
+			playerIds: playerIdSet.size ? [...playerIdSet].join(',') : undefined,
+			positions: positionSet.size ? [...positionSet].join(',')  : undefined,
+			alreadyTakenIds: alreadyTakenIdSet.size ? [...alreadyTakenIdSet].join(',') : undefined,
+			minPrice,
+			maxPrice,
+			name: nameFilter || undefined,
+		});
 
 		return res.json({
-			players: paginatedPlayers,
-			pagination,
-			sorting: { sort: requestedSort, asc },
-			meta: getEvaluationMeta('Player evaluations sourced from API.')
+			players: evaluatedPlayers,
+			meta: getEvaluationMeta('external-evaluator', 'Player evaluations sourced from API.')
 		});
 	} catch (error) {
-		console.error('Evaluation players API error:', error);
-		return res.status(502).json({ error: 'Failed to fetch player evaluations from API' });
+		try {
+			const fallbackPlayers = await getPlayers();
+			const fallbackEvaluations: PlayerEvaluation[] = fallbackPlayers.map((player) => {
+				return {
+					id: player.id,
+					name: player.name,
+					team: player.team,
+					positions: player.positions,
+					suggestedValue: player.suggestedValue,
+					evaluation: {
+						score: 0,
+						tier: 'N/A',
+						confidence: 0,
+						summary: 'Fallback evaluation - no evaluation data available'
+					}
+				};
+			}).filter((player) => {
+				if (playerIdSet.size && !playerIdSet.has(player.id)) {
+					return false;
+				}
+
+				if (alreadyTakenIdSet.has(player.id)) {
+					return false;
+				}
+
+				if (positionSet.size) {
+					const hasRequestedPosition = player.positions.some((position) => positionSet.has(position));
+					if (!hasRequestedPosition) {
+						return false;
+					}
+				}
+
+				if (minPrice !== undefined && player.suggestedValue < minPrice) {
+					return false;
+				}
+
+				if (maxPrice !== undefined && player.suggestedValue > maxPrice) {
+					return false;
+				}
+
+				if (nameFilter && !player.name.toLowerCase().includes(nameFilter.toLowerCase())) {
+					return false;
+				}
+
+				return true;
+			});
+
+			return res.json({
+				players: fallbackEvaluations,
+				meta: getEvaluationMeta('backend-fallback', 'Fallback player evaluations because API evaluation is currently unavailable.')
+			});
+		} catch (fallbackError) {
+			console.error('Evaluation players API fallback error:', fallbackError);
+			return res.status(502).json({ error: 'Failed to fetch player evaluations' });
+		}
 	}
 });
 
@@ -90,10 +117,8 @@ router.get('/drafts', async (req: Request, res: Response) => {
 
 		let evaluationsByPlayerId: Record<PlayerID, PlayerEvaluation> = {};
 		if (playerIds.length) {
-			const query = new URLSearchParams();
-			query.append('playerIds', playerIds.join(','));
-			const { data } = await api.get<PlayerEvaluation[]>(`/evaluation/players?${query.toString()}`);
-			evaluationsByPlayerId = Object.fromEntries((data ?? []).map((player) => [player.id, player]));
+			const players = await getPlayerEvaluations({ playerIds: playerIds.join(',') });
+			evaluationsByPlayerId = Object.fromEntries(players.map((player) => [player.id, player]));
 		}
 
 		const slotsOrder: Position[] = [
@@ -130,11 +155,11 @@ router.get('/drafts', async (req: Request, res: Response) => {
 
 		return res.json({
 			drafts: evaluatedDrafts,
-			meta: getEvaluationMeta('Draft evaluations computed from draft rosters and API player evaluations.')
+			meta: getEvaluationMeta('external-evaluator', 'Draft evaluations computed from draft rosters and API player evaluations.')
 		});
 	} catch (error) {
 		console.error('Evaluation drafts API error:', error);
-		return res.status(502).json({ error: 'Failed to fetch draft evaluations from API' });
+		return res.status(502).json({ error: 'Failed to fetch draft evaluations' });
 	}
 });
 

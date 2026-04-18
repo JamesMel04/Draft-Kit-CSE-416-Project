@@ -88,26 +88,32 @@ export default function Evaluation() {
     const playerColumns = [
         {
             header: "Player",
+            sortField: "name",
             renderCell: (player: PlayerEvaluation) => <span className="font-semibold">{player.name}</span>,
         },
         {
             header: "Team",
+            sortField: "team",
             renderCell: (player: PlayerEvaluation) => player.team,
         },
         {
             header: "Pos",
+            sortField: "positions",
             renderCell: (player: PlayerEvaluation) => player.positions.join(", "),
         },
         {
             header: "Value",
+            sortField: "suggestedValue",
             renderCell: (player: PlayerEvaluation) => `$${player.suggestedValue}`,
         },
         {
             header: "Eval Score",
+            sortField: "evaluation.score",
             renderCell: (player: PlayerEvaluation) => player.evaluation.score,
         },
         {
             header: "Tier",
+            sortField: "evaluation.tier",
             renderCell: (player: PlayerEvaluation) => player.evaluation.tier,
         },
     ];

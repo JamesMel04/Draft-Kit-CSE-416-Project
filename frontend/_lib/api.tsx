@@ -5,7 +5,6 @@ import {
     DraftEvaluationResponse,
     PlayerEvaluationQueryParams,
     PlayerEvaluationResponse,
-    PaginationMeta,
     PlayerData,
     PlayerQueryParams,
     PlayerGetResponse,
@@ -30,27 +29,6 @@ function cleanParams(params: QueryParams): CleanQueryParams {
     ) as CleanQueryParams;
 }
 
-function normalizePagination(
-    raw: PaginationMeta | undefined,
-    requestedPage: number,
-    requestedLimit: number,
-    currentCount: number
-): PaginationMeta {
-    const limit = requestedLimit > 0 ? requestedLimit : raw?.limit ?? 25;
-    const total = Math.max(raw?.total ?? currentCount, currentCount);
-    const totalPages = Math.max(1, Math.ceil(total / limit));
-    const page = Math.min(Math.max(raw?.page ?? requestedPage, 1), totalPages);
-
-    return {
-        total,
-        page,
-        limit,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
-    };
-}
-
 
 export async function getPlayer(id : PlayerID) : Promise<PlayerData> {
     try {
@@ -63,12 +41,14 @@ export async function getPlayer(id : PlayerID) : Promise<PlayerData> {
 }
 
 /*
-Get players on specific page, based off parameters specified in backend documentation (README)
+Get players with backend filtering parameters
 */
 export async function getPlayers(params : PlayerQueryParams) : Promise<PlayerGetResponse> {
     try {
         const res = (await api.get<PlayerGetResponse>(`/players`, {
-            params: cleanParams(params),
+            params: cleanParams({
+                name: params.name,
+            }),
         })).data;
 
         return res;
@@ -79,8 +59,6 @@ export async function getPlayers(params : PlayerQueryParams) : Promise<PlayerGet
 }
 
 export async function getEvaluatedPlayers(filters: PlayerEvaluationQueryParams = {}): Promise<PlayerEvaluationResponse> {
-    const requestedPage = filters.page ?? 1;
-    const requestedLimit = filters.limit ?? 25;
     const queryPositions = filters.positions?.length ? Array.from(new Set(filters.positions.flatMap((pos) => (pos.toUpperCase() === "P" ? ["P", "SP", "RP"] : [pos])))) : undefined;
 
     const res = (await api.get<PlayerEvaluationResponse>(`/evaluation/players`, {
@@ -91,16 +69,11 @@ export async function getEvaluatedPlayers(filters: PlayerEvaluationQueryParams =
             minPrice: filters.minPrice,
             maxPrice: filters.maxPrice,
             name: filters.name,
-            sort: filters.sort,
-            asc: filters.asc,
-            page: filters.page,
-            limit: filters.limit,
         }),
     })).data;
 
     return {
         ...res,
-        pagination: normalizePagination(res.pagination, requestedPage, requestedLimit, res.players.length),
         meta: {
             source: res.meta?.source ?? "backend",
             provider: res.meta?.provider ?? "external-evaluator",

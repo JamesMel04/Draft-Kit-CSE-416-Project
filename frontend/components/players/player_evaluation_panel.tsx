@@ -1,12 +1,14 @@
 "use client";
 
 import { getEvaluatedPlayers } from "@/_lib/api";
-import { PlayerEvaluation, PlayerEvaluationQueryParams, EvaluationMeta, PaginationMeta, Position } from "@/_lib/types";
-import Pagination from "@/components/ui/pagination";
+import { PlayerEvaluation, PlayerEvaluationQueryParams, EvaluationMeta, Position, SortAsc, SortField } from "@/_lib/types";
+import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline";
+import { sortEvaluatedPlayers } from "@/utils/sorters";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 
 type PlayerEvaluationColumn = {
   header: string;
+  sortField?: SortField;
   renderCell: (player: PlayerEvaluation) => ReactNode;
 };
 
@@ -17,15 +19,13 @@ type PlayerEvaluationPanelProps = {
   positionOptions: string[];
   emptyMessage: string;
   showClearFilters?: boolean;
-  pageSize?: number;
-  defaultSort?: string;
-  defaultAsc?: boolean;
+  defaultSort?: SortField;
+  defaultAsc?: SortAsc;
   initialSearchOnMount?: boolean;
   hiddenPlayerIds?: string[];
   buildFilters?: (base: PlayerEvaluationQueryParams) => PlayerEvaluationQueryParams;
   onResultsChange?: (payload: {
     players: PlayerEvaluation[];
-    pagination: PaginationMeta | null;
     meta: EvaluationMeta | null;
   }) => void;
 };
@@ -37,7 +37,6 @@ export default function PlayerEvaluationPanel({
   positionOptions,
   emptyMessage,
   showClearFilters = false,
-  pageSize = 25,
   defaultSort = "suggestedValue",
   defaultAsc = false,
   initialSearchOnMount = false,
@@ -53,16 +52,34 @@ export default function PlayerEvaluationPanel({
   const [maxPriceInput, setMaxPriceInput] = useState("");
   const [selectedPositions, setSelectedPositions] = useState<Position[]>([]);
   const [players, setPlayers] = useState<PlayerEvaluation[]>([]);
-  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
-  const [page, setPage] = useState(1);
+  const [sortField, setSortField] = useState<SortField>(defaultSort);
+  const [sortAsc, setSortAsc] = useState<SortAsc>(defaultAsc);
+
+  const sortedPlayers = useMemo(() => {
+    return sortEvaluatedPlayers(players, sortField, sortAsc);
+  }, [players, sortField, sortAsc]);
+
+  const handleSort = (columnSortField?: SortField) => {
+    if (!columnSortField) {
+      return;
+    }
+
+    if (columnSortField === sortField) {
+      setSortAsc((prev) => !prev);
+      return;
+    }
+
+    setSortField(columnSortField);
+    setSortAsc(false);
+  };
 
   const visiblePlayers = useMemo(() => {
-    if (!hiddenPlayerIds?.length) return players;
+    if (!hiddenPlayerIds?.length) return sortedPlayers;
     const hiddenSet = new Set(hiddenPlayerIds);
-    return players.filter((player) => !hiddenSet.has(player.id));
-  }, [hiddenPlayerIds, players]);
+    return sortedPlayers.filter((player) => !hiddenSet.has(player.id));
+  }, [hiddenPlayerIds, sortedPlayers]);
 
-  const runSearch = async (requestedPage = page) => {
+  const runSearch = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -72,10 +89,6 @@ export default function PlayerEvaluationPanel({
         positions: selectedPositions,
         minPrice: minPriceInput ? Number(minPriceInput) : undefined,
         maxPrice: maxPriceInput ? Number(maxPriceInput) : undefined,
-        sort: defaultSort,
-        asc: defaultAsc,
-        page: requestedPage,
-        limit: pageSize,
       };
 
       const filters = buildFilters ? buildFilters(baseFilters) : baseFilters;
@@ -83,15 +96,12 @@ export default function PlayerEvaluationPanel({
 
       setPlayers(response.players);
       setSource(response.meta.source);
-      setPagination(response.pagination);
-      setPage(response.pagination.page);
-      onResultsChange?.({ players: response.players, pagination: response.pagination, meta: response.meta });
+      onResultsChange?.({ players: response.players, meta: response.meta });
     } catch {
       setPlayers([]);
       setSource(null);
-      setPagination(null);
       setError("Failed to evaluate players.");
-      onResultsChange?.({ players: [], pagination: null, meta: null });
+      onResultsChange?.({ players: [], meta: null });
     } finally {
       setLoading(false);
     }
@@ -108,13 +118,17 @@ export default function PlayerEvaluationPanel({
     setMinPriceInput("");
     setMaxPriceInput("");
     setSelectedPositions([]);
-    setPage(1);
   };
 
   useEffect(() => {
     if (!initialSearchOnMount) return;
-    runSearch(1);
+    runSearch();
   }, []);
+
+  useEffect(() => {
+    setSortField(defaultSort);
+    setSortAsc(defaultAsc);
+  }, [defaultSort, defaultAsc]);
 
   return (
     <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -189,7 +203,7 @@ export default function PlayerEvaluationPanel({
       <div className="flex gap-2">
         <button
           type="button"
-          onClick={() => runSearch(1)}
+          onClick={runSearch}
           className="rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800"
         >
           {loading ? "Searching..." : "Search"}
@@ -213,25 +227,21 @@ export default function PlayerEvaluationPanel({
       )}
 
       <div className="overflow-x-auto rounded-lg border border-slate-200">
-        {pagination && (
-          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-            <Pagination
-              currentPage={pagination.page}
-              totalPages={pagination.totalPages}
-              total={pagination.total}
-              disabled={loading}
-              onPrev={() => runSearch(Math.max(1, page - 1))}
-              onNext={() => runSearch(page + 1)}
-            />
-          </div>
-        )}
-
         <table className="min-w-full border-collapse text-sm">
           <thead className="bg-slate-100 text-slate-800">
             <tr>
               {columns.map((column) => (
-                <th key={column.header} className="px-3 py-2 text-left font-bold">
-                  {column.header}
+                <th
+                  key={column.header}
+                  className={`px-3 py-2 text-left font-bold ${column.sortField ? "cursor-pointer select-none" : ""}`}
+                  onClick={() => handleSort(column.sortField)}
+                >
+                  <span className="inline-flex items-center gap-1">
+                    {column.header}
+                    {column.sortField && sortField === column.sortField ? (
+                      sortAsc ? <ArrowUpIcon className="h-4 w-4 text-blue-600" /> : <ArrowDownIcon className="h-4 w-4 text-blue-600" />
+                    ) : null}
+                  </span>
                 </th>
               ))}
             </tr>
@@ -257,19 +267,6 @@ export default function PlayerEvaluationPanel({
           </tbody>
         </table>
       </div>
-
-      {pagination && (
-        <div className="flex items-center justify-between text-xs text-slate-600">
-          <Pagination
-            currentPage={pagination.page}
-            totalPages={pagination.totalPages}
-            total={pagination.total}
-            disabled={loading}
-            onPrev={() => runSearch(Math.max(1, page - 1))}
-            onNext={() => runSearch(page + 1)}
-          />
-        </div>
-      )}
     </div>
   );
 }

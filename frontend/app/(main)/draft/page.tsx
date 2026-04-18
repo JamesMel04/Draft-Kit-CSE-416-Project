@@ -293,9 +293,6 @@ export default function Draft() {
         setEvaluationLoading(true);
         const response = await getEvaluatedPlayers({
           name: activePlayerName,
-          limit: 5,
-          sort: "suggestedValue",
-          asc: false,
         });
 
         const exact = response.players.find(
@@ -320,18 +317,22 @@ export default function Draft() {
   const availablePlayerColumns = [
     {
       header: "Player",
+      sortField: "name",
       renderCell: (player: PlayerEvaluation) => <span className="font-semibold">{player.name}</span>,
     },
     {
       header: "Pos",
+      sortField: "positions",
       renderCell: (player: PlayerEvaluation) => player.positions.join(", "),
     },
     {
       header: "Value",
+      sortField: "suggestedValue",
       renderCell: (player: PlayerEvaluation) => `$${player.suggestedValue}`,
     },
     {
       header: "Eval",
+      sortField: "evaluation.score",
       renderCell: (player: PlayerEvaluation) => `${player.evaluation.score} (${player.evaluation.tier})`,
     },
     {
