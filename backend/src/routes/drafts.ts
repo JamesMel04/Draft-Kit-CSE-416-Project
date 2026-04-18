@@ -6,8 +6,7 @@ const router = Router();
 router.get('/saved', async (req: Request, res: Response) => {
   try {
     const userIdHeader = req.header('x-user-id');
-    const userIdQuery = typeof req.query.userId === 'string' ? req.query.userId : undefined;
-    const userId = userIdHeader || userIdQuery || 'anonymous-user';
+    const userId = userIdHeader || 'anonymous-user';
 
     const drafts = testDraftDataSet.slice(0, 5).map((draft, index) => ({
       draftId: draft.id,

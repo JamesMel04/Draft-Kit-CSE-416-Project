@@ -104,7 +104,6 @@ export async function getSavedDrafts(userId?: string): Promise<SavedDraftSummary
         if (!userId) return [];
 
         const res = (await api.get<SavedDraftsResponse>("/drafts/saved", {
-            params: { userId },
             headers: {
                 "x-user-id": userId,
             },
