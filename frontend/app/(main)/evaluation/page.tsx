@@ -1,11 +1,11 @@
 "use client";
 
-import { getEvaluatedDrafts, getSavedDrafts } from "@/_lib/api";
-import { allSearchFilterPositions } from "@/_lib/consts";
-import { DraftEvaluation, PlayerEvaluation, EvaluationMeta, SavedDraftSummary } from "@/_lib/types";
-import PlayerEvaluationPanel from "@/components/players/player_evaluation_panel";
-import { useEffect, useMemo, useState } from "react";
-import { useUser } from "@auth0/nextjs-auth0/client";
+import { useEffect, useMemo, useState } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
+import { DraftEvaluation, PlayerEvaluation, EvaluationMeta, SavedDraftSummary } from '@/_lib/types';
+import { allSearchFilterPositions } from '@/_lib/consts';
+import { getEvaluatedDrafts, getSavedDrafts } from '@/_lib/api';
+import PlayerEvaluationPanel from '@/components/players/player_evaluation_panel';
 
 export default function Evaluation() {
     const { user } = useUser();

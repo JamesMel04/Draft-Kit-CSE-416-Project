@@ -1,9 +1,10 @@
-"use client"
-import { PlayerData, SortAsc, SortField } from "@/_lib/types";
-import { sortPlayers } from "@/utils/sorters";
-import { useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
+"use client";
+
+import { useMemo } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/outline';
+import { PlayerData, SortAsc, SortField } from '@/_lib/types';
+import { sortPlayers } from '@/utils/sorters';
 
 export default function PlayerTable({ players }  : {players : PlayerData[] | null } ) {
   const router = useRouter();

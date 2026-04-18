@@ -1,6 +1,7 @@
-import { getPlayers } from "@/_lib/api";
-import { PlayerQueryParams, PlayerGetResponse } from "@/_lib/types";
-import PlayerTable from "@/components/players/player_table";
+import { PlayerQueryParams, PlayerGetResponse } from '@/_lib/types';
+import { getPlayers } from '@/_lib/api';
+import PlayerTable from '@/components/players/player_table';
+
 // Comment out for now, not sure it's needed
 // export const dynamic="force-dynamic"
 export default async function Player({searchParams} : {searchParams: PlayerQueryParams}) {

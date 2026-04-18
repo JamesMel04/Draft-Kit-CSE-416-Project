@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { testDraftDataSet } from '@data/test-data';
+import { testDraftDataSet } from '@/data/test-data';
 
 const router = Router();
 

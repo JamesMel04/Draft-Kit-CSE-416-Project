@@ -1,4 +1,4 @@
-import { auth0 } from "./_lib/auth0";
+import { auth0 } from '@/_lib/auth0';
 
 export async function middleware(request: Request) {
   return auth0.middleware(request);

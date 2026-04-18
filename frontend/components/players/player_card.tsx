@@ -1,6 +1,7 @@
 /* General Purpose player card, in case it's used anywhere else */
-"use client"
-import { PlayerData } from "@/_lib/types"
+"use client";
+
+import { PlayerData } from '@/_lib/types';
 
 export default function PlayerCard({player} : {player : PlayerData} ) {
     return(
