@@ -1,7 +1,7 @@
-import Link from 'next/link'
-import PlayerSearch from "../../components/ui/search";
-import HeaderUserMenu from "../../components/ui/login-status";
 import { Suspense } from 'react';
+import Link from 'next/link';
+import PlayerSearch from '@/components/ui/search';
+import HeaderUserMenu from '@/components/ui/login-status';
 
 export default function MainLayout({
   children,

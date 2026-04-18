@@ -6,7 +6,7 @@ import {
 	parseOptionalNumberQuery,
 	parseStringQuery
 } from '@/utils/parsers';
-import { testDraftDataSet } from '../data/test-data';
+import { testDraftDataSet } from '@/data/test-data';
 
 const router = Router();
 

@@ -1,10 +1,10 @@
 "use client";
 
-import { getEvaluatedPlayers } from "@/_lib/api";
-import { PlayerEvaluation, PlayerEvaluationQueryParams, EvaluationMeta, Position, SortAsc, SortField } from "@/_lib/types";
-import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline";
-import { sortEvaluatedPlayers } from "@/utils/sorters";
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/24/outline';
+import { PlayerEvaluation, PlayerEvaluationQueryParams, EvaluationMeta, Position, SortAsc, SortField } from '@/_lib/types';
+import { getEvaluatedPlayers } from '@/_lib/api';
+import { sortEvaluatedPlayers } from '@/utils/sorters';
 
 type PlayerEvaluationColumn = {
   header: string;

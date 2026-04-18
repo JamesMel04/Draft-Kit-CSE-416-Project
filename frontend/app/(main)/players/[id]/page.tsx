@@ -1,6 +1,5 @@
-import { getPlayer } from "@/_lib/api";
-import PlayerCard from "@/components/players/player_card";
-
+import { getPlayer } from '@/_lib/api';
+import PlayerCard from '@/components/players/player_card';
 
 export default async function PlayerView({
     params

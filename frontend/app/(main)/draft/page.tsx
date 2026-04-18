@@ -1,10 +1,10 @@
 "use client";
 
-import { getEvaluatedPlayers } from "@/_lib/api";
-import { allPositions, allSearchFilterPositions } from "@/_lib/consts";
-import { PlayerEvaluation, Position } from "@/_lib/types";
-import PlayerEvaluationPanel from "@/components/players/player_evaluation_panel";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from 'react';
+import { PlayerEvaluation, Position } from '@/_lib/types';
+import { allPositions, allSearchFilterPositions } from '@/_lib/consts';
+import { getEvaluatedPlayers } from '@/_lib/api';
+import PlayerEvaluationPanel from '@/components/players/player_evaluation_panel';
 
 type TeamName = "My Team" | "Team 2" | "Team 3" | "Team 4";
 type CellRef = { team: TeamName; pos: Position };

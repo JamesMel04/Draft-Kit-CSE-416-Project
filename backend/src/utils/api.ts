@@ -1,7 +1,7 @@
 
 import axios from 'axios';
-import { requiredEnv } from "@/utils/env-reader";
 import { PlayerData, PlayerEvaluation } from '@/types';
+import { requiredEnv } from "@/utils/env-reader";
 
 type QueryParamValue = string | number | boolean | undefined;
 type QueryParams = Record<string, QueryParamValue>;

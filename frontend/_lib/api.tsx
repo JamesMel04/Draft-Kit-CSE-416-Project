@@ -1,5 +1,5 @@
 /* ONLY ADD SERVER FUNCTIONS HERE, NEVER DIRECTLY CALL fetch() */
-import { BACKEND_URL } from "./consts";
+import axios from 'axios';
 import {
     CleanQueryParams,
     DraftEvaluationResponse,
@@ -13,8 +13,8 @@ import {
     SavedDraftSummary,
     DraftID,
     PlayerID,
-} from "./types";
-import axios from "axios";
+} from '@/_lib/types';
+import { BACKEND_URL } from '@/_lib/consts';
 
 /*
 * Config for axios. Much easier to make backend requests this way
