@@ -1,4 +1,6 @@
-# Backend Service Endpoints
+# Backend Service
+
+This is the backend for Draft Kit.
 
 Base URL (local development):
 
@@ -8,12 +10,59 @@ http://localhost:4000
 
 All requests and responses use JSON.
 
+## Overview
+
+The backend exposes the REST API for Draft Kit. It serves the homepage, player and draft data, and evaluation routes that either forward to the external evaluator API or fall back to backend player data when needed.
+
+## Scripts
+
+From the `backend` directory:
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run test
+```
+
+## Environment Variables
+
+The backend reads the following environment variables:
+
+| Name | Required | Purpose |
+| ---- | -------- | ------- |
+| `API_URL` | yes | Base URL for the upstream evaluator API used by `/evaluation/players` and `/evaluation/drafts`. |
+| `PORT` | no | Port the backend server listens on. Defaults to `4000`. |
+
+Example `.env` file:
+
+```txt
+API_URL=https://your-evaluator-api.example.com
+PORT=4000
+```
+
+## Service Structure
+
+Key backend files and folders:
+
+- `src/server.ts` - Express app setup and route registration.
+- `src/routes/` - route handlers for players, compare, drafts, and evaluation.
+- `src/utils/` - shared helpers for env vars, API calls, parsing, pagination, and sorting.
+- `src/data/` - local test data used by compare and draft routes.
+- `public/` - static files served by the backend.
+
+## Notes
+
+- Sorting is handled on the frontend, so backend list routes return data without sorting or pagination metadata.
+- `/evaluation/players` falls back to backend player data if the external evaluator API cannot be reached.
+- `/evaluation/drafts` still depends on the evaluator API for player ratings used in draft totals.
+
 ## Endpoint Summary
 
 | Method | Endpoint | Description |
 | ------ | -------- | ----------- |
 | GET | `/` | Serves `public/index.html` |
-| GET | `/players` | List players with optional filter/sort/pagination |
+| GET | `/players` | List players with optional name filter |
 | GET | `/players/:id` | Get one player by ID |
 | GET | `/players/:id/notes` | Get notes for a player (placeholder) |
 | POST | `/players/:id/notes` | Save notes for a player (placeholder) |
@@ -21,24 +70,20 @@ All requests and responses use JSON.
 | GET | `/drafts/saved` | Fetch saved drafts (currently placeholder, returns 500) |
 | GET | `/drafts/:id` | Get one draft by ID |
 | POST | `/drafts/:id/player` | Add player to draft (placeholder) |
-| GET | `/evaluation/players` | Fetch evaluated players from evaluator API |
+| GET | `/evaluation/players` | Fetch evaluated players from evaluator API, with backend fallback to player data if needed |
 | GET | `/evaluation/drafts` | Build draft evaluations from rosters + evaluator API |
 
-## Players
+## Detailed Routes
 
 ### GET `/players`
 
-Returns player data with optional name filter, sorting, and pagination.
+Returns player data with an optional name filter.
 
 Query params:
 
 | Name | Type | Default | Notes |
 | ---- | ---- | ------- | ----- |
 | `name` | string | `""` | Case-insensitive substring filter |
-| `sort` | string | `suggestedValue` | Falls back to `suggestedValue` if invalid |
-| `asc` | boolean | `false` | `true` for ascending |
-| `page` | number | `1` | 1-based |
-| `limit` | number | `25` | max 100 |
 
 Example response:
 
@@ -57,19 +102,7 @@ Example response:
         "threeYearAvg": { "seasons": [2023, 2024, 2025], "hitter": { "Homeruns": 3 } }
       }
     }
-  ],
-  "pagination": {
-    "total": 4,
-    "page": 1,
-    "limit": 25,
-    "totalPages": 1,
-    "hasNext": false,
-    "hasPrev": false
-  },
-  "sorting": {
-    "sort": "suggestedValue",
-    "asc": false
-  }
+  ]
 }
 ```
 
@@ -102,8 +135,6 @@ Response:
 }
 ```
 
-## Compare
-
 ### GET `/compare`
 
 Query params:
@@ -122,8 +153,6 @@ Response shape:
   "comparison": {}
 }
 ```
-
-## Drafts
 
 ### GET `/drafts/saved`
 
@@ -150,11 +179,9 @@ Request body:
 
 If `playerId` or `position` is missing, returns `400`.
 
-## Evaluation
-
 ### GET `/evaluation/players`
 
-Forwards filters to evaluator API, then paginates locally.
+Forwards filters to the evaluator API and falls back to backend player data if the evaluator is unavailable.
 
 Query params:
 
@@ -166,25 +193,12 @@ Query params:
 | `minPrice` | number | |
 | `maxPrice` | number | |
 | `name` | string | |
-| `sort` | string | |
-| `asc` | boolean | |
-| `page` | number | default 1 |
-| `limit` | number | default 25, max 100 |
 
 Response shape:
 
 ```json
 {
   "players": [],
-  "pagination": {
-    "total": 0,
-    "page": 1,
-    "limit": 25,
-    "totalPages": 1,
-    "hasNext": false,
-    "hasPrev": false
-  },
-  "sorting": { "sort": "suggestedValue", "asc": false },
   "meta": {
     "source": "backend",
     "provider": "external-evaluator",
@@ -193,6 +207,8 @@ Response shape:
   }
 }
 ```
+
+When the evaluator API is unavailable, the route returns fallback player evaluations built from the backend player list and uses a backend fallback provider value in `meta`.
 
 ### GET `/evaluation/drafts`
 
