@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useUser } from '@auth0/nextjs-auth0/client';
-import { DraftEvaluation, PlayerEvaluation, EvaluationMeta, SavedDraftSummary } from '@/_lib/types';
+import { DraftEvaluation, PlayerEvaluation, EvaluationMeta, DraftData} from '@/_lib/types';
 import { allSearchFilterPositions } from '@/_lib/consts';
 import { getEvaluatedDrafts, getSavedDrafts } from '@/_lib/api';
 import PlayerEvaluationPanel from '@/components/players/player_evaluation_panel';
 
 export default function Evaluation() {
     const { user } = useUser();
-    const [savedDrafts, setSavedDrafts] = useState<SavedDraftSummary[]>([]);
+    const [savedDrafts, setSavedDrafts] = useState<DraftData[]>([]);
     const [selectedDraftIds, setSelectedDraftIds] = useState<string[]>([]);
     const [savedDraftsLoading, setSavedDraftsLoading] = useState(false);
     const [savedDraftsError, setSavedDraftsError] = useState<string | null>(null);
@@ -27,12 +27,7 @@ export default function Evaluation() {
             try {
                 setSavedDraftsLoading(true);
                 setSavedDraftsError(null);
-                if (!user?.sub) {
-                    setSavedDrafts([]);
-                    return;
-                }
-
-                const drafts = await getSavedDrafts(user.sub);
+                const drafts = await getSavedDrafts(user?.sub);
                 setSavedDrafts(drafts);
             } catch {
                 setSavedDraftsError("Failed to load saved drafts.");
@@ -161,22 +156,20 @@ export default function Evaluation() {
                         ) : (
                             <div className="mt-2 space-y-2">
                                 {savedDrafts.map((draft) => {
-                                    const selected = selectedDraftIds.includes(draft.draftId);
+                                    const selected = selectedDraftIds.includes(draft.id);
                                     return (
                                         <label
-                                            key={draft.draftId}
+                                            key={draft.id}
                                             className="flex cursor-pointer items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2"
                                         >
                                             <div>
-                                                <div className="text-sm font-semibold text-slate-900">{draft.name}</div>
-                                                <div className="text-xs text-slate-500">
-                                                    {draft.draftId} | {new Date(draft.updatedAt).toLocaleString()}
-                                                </div>
+                                                <div className="text-sm font-semibold text-slate-900">{draft.teamName}</div>
+                                                <div className="text-xs text-slate-500"> {draft.id}</div>
                                             </div>
                                             <input
                                                 type="checkbox"
                                                 checked={selected}
-                                                onChange={() => toggleDraftSelection(draft.draftId)}
+                                                onChange={() => toggleDraftSelection(draft.id)}
                                             />
                                         </label>
                                     );
@@ -208,7 +201,7 @@ export default function Evaluation() {
 
                     {bestDraft && (
                         <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
-                            Best draft: <span className="font-semibold">{bestDraft.draftId}</span> | Value {bestDraft.totals.value}
+                            Best draft: <span className="font-semibold">{bestDraft.id}</span> | Value {bestDraft.totals.value}
                         </div>
                     )}
 
@@ -229,8 +222,8 @@ export default function Evaluation() {
                                     </tr>
                                 ) : (
                                     draftResults.map((draft) => (
-                                        <tr key={draft.draftId} className="border-t border-slate-200">
-                                            <td className="px-3 py-2 font-semibold">{draft.draftId}</td>
+                                        <tr key={draft.id} className="border-t border-slate-200">
+                                            <td className="px-3 py-2 font-semibold">{draft.id}</td>
                                             <td className="px-3 py-2">{draft.totals.value}</td>
                                         </tr>
                                     ))

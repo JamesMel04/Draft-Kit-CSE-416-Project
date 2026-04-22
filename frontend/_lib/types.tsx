@@ -66,12 +66,14 @@ export type DraftSlotEvaluation = {
 };
 
 export type DraftData = {
+  userId: string;
   id: DraftID;
+  teamName: string;
   roster: Record<Position, PlayerID>;
 };
 
 export type DraftEvaluation = {
-  draftId: DraftID;
+  id: DraftID;
   slots: DraftSlotEvaluation[];
   totals: {
     value: number;
@@ -133,13 +135,6 @@ export type DraftEvaluationResponse = {
   meta: EvaluationMeta;
 };
 
-export type SavedDraftSummary = {
-  draftId: DraftID;
-  name: string;
-  userId: string;
-  updatedAt: string;
-};
-
 export type SavedDraftsResponse = {
-  drafts: SavedDraftSummary[];
+  drafts: DraftData[];
 };

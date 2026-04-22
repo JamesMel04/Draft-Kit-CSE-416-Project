@@ -115,7 +115,9 @@ export const testPlayerDataSet: PlayerData[] = [
 
 export const testDraftDataSet: DraftData[] = [
   {
+    userId: 'anonymous-user',
     id: "draft1",
+    teamName: "Team1",
     roster: {
       ...emptyRoster,
       "C": testPlayerDataSet[0].id,
@@ -123,7 +125,9 @@ export const testDraftDataSet: DraftData[] = [
     }
   },
   {
+    userId: 'anonymous-user',
     id: "draft2",
+    teamName: "Team2",
     roster: {
       ...emptyRoster,
       "C": testPlayerDataSet[2].id,

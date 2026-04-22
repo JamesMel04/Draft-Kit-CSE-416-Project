@@ -20,12 +20,12 @@ function getEvaluationMeta(provider: string, notes: string): EvaluationMeta {
 }
 
 router.get('/players', async (req: Request, res: Response) => {
-	const playerIdSet = new Set(req.query.playerIds !== undefined ? parseCsvQuery(req.query.playerIds) : []);
-	const positionSet = new Set(req.query.positions !== undefined ? parseCsvQuery(req.query.positions) : []);
-	const alreadyTakenIdSet = new Set(req.query.alreadyTakenIds !== undefined ? parseCsvQuery(req.query.alreadyTakenIds) : []);
+	const playerIdSet = new Set(parseCsvQuery(req.query.playerIds));
+	const positionSet = new Set(parseCsvQuery(req.query.positions));
+	const alreadyTakenIdSet = new Set(parseCsvQuery(req.query.alreadyTakenIds));
 
-	const minPrice = req.query.minPrice !== undefined ? parseOptionalNumberQuery(req.query.minPrice) : undefined;
-	const maxPrice = req.query.maxPrice !== undefined ? parseOptionalNumberQuery(req.query.maxPrice) : undefined;
+	const minPrice = parseOptionalNumberQuery(req.query.minPrice);
+	const maxPrice = parseOptionalNumberQuery(req.query.maxPrice);
 	const nameFilter = parseStringQuery(req.query.name, '');
 
 	try {
@@ -102,7 +102,7 @@ router.get('/players', async (req: Request, res: Response) => {
 });
 
 router.get('/drafts', async (req: Request, res: Response) => {
-	const requestedDraftIds = req.query.draftIds !== undefined ? parseCsvQuery(req.query.draftIds) : [];
+	const requestedDraftIds = parseCsvQuery(req.query.draftIds);
 	// Eventually to be replaced by Database Access
 	const selectedDrafts = requestedDraftIds.length
 		? testDraftDataSet.filter((draft) => requestedDraftIds.includes(draft.id))
@@ -147,7 +147,7 @@ router.get('/drafts', async (req: Request, res: Response) => {
 			);
 
 			return {
-				draftId: draft.id,
+				id: draft.id,
 				slots,
 				totals
 			};

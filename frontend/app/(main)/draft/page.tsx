@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
-import { PlayerEvaluation, Position } from '@/_lib/types';
+import { PlayerEvaluation, Position, DraftData } from '@/_lib/types';
+import { saveDraft } from '@/_lib/api';
 import { allPositions, allSearchFilterPositions } from '@/_lib/consts';
 import { getEvaluatedPlayers } from '@/_lib/api';
 import PlayerEvaluationPanel from '@/components/players/player_evaluation_panel';
+import { useUser } from '@auth0/nextjs-auth0';
 
 type TeamName = "My Team" | "Team 2" | "Team 3" | "Team 4";
 type CellRef = { team: TeamName; pos: Position };
@@ -51,6 +53,38 @@ function canPlayerFitSlot(playerPositions: string[], slot: Position): boolean {
 export default function Draft() {
   const teams: TeamName[] = ["My Team", "Team 2", "Team 3", "Team 4"];
 
+  // Confirmation handler state
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Helper to create DraftData objects from current state
+  // If you have existing draft IDs, include them; otherwise, omit id for new drafts
+  function buildDraftData(): Partial<DraftData>[] {
+    return teams.map((team) => {
+      // If you have a way to track an existing draft's id for this team, include it here
+      // For now, assume all are new drafts (no id)
+      return {
+        teamName: team,
+        roster: Object.fromEntries(
+          allPositions.map((pos) => [pos, rosterPlayerIds[team][pos] ?? ''])
+        ) as Record<Position, string>,
+      };
+    });
+  }
+
+  async function handleConfirmDrafts() {
+    setSubmitStatus('submitting');
+    setSubmitError(null);
+    try {
+      const drafts = buildDraftData();
+      await Promise.all(drafts.map((draft) => saveDraft(draft)));
+      setSubmitStatus('success');
+    } catch (err: any) {
+      setSubmitStatus('error');
+      setSubmitError((err as any)?.message || 'Failed to save drafts');
+    }
+  }
+
   const emptyTeamRoster = allPositions.reduce((acc, pos) => {
     acc[pos] = null;
     return acc;
@@ -59,8 +93,8 @@ export default function Draft() {
   const seededRoster: Record<TeamName, Partial<Record<Position, string | null>>> = {
     "My Team": {
       ...emptyTeamRoster,
-      "1B": "Freddie Freeman",
-      "OF1": "Shohei Ohtani",
+      '1B': "Freddie Freeman",
+      'OF1': "Shohei Ohtani",
     },
     "Team 2": { ...emptyTeamRoster },
     "Team 3": { ...emptyTeamRoster },
@@ -417,6 +451,22 @@ export default function Draft() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={handleConfirmDrafts}
+          className="rounded-md bg-emerald-700 px-4 py-2 text-white font-semibold hover:bg-emerald-800"
+          disabled={submitStatus === 'submitting'}
+        >
+          {submitStatus === 'submitting' ? 'Saving...' : 'Confirm & Save All Drafts'}
+        </button>
+        {submitStatus === 'success' && (
+          <span className="text-emerald-700 font-semibold">Drafts saved!</span>
+        )}
+        {submitStatus === 'error' && (
+          <span className="text-rose-700 font-semibold">{submitError}</span>
+        )}
+      </div>
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">Placeholder League Draft Tracker</h1>
         <p className="mt-1 text-sm text-slate-600">Personal companion board for tracking your draft strategy.</p>
