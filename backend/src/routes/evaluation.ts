@@ -20,12 +20,12 @@ function getEvaluationMeta(provider: string, notes: string): EvaluationMeta {
 }
 
 router.get('/players', async (req: Request, res: Response) => {
-	const playerIdSet = new Set(req.query.playerIds !== undefined ? parseCsvQuery(req.query.playerIds) : []);
-	const positionSet = new Set(req.query.positions !== undefined ? parseCsvQuery(req.query.positions) : []);
-	const alreadyTakenIdSet = new Set(req.query.alreadyTakenIds !== undefined ? parseCsvQuery(req.query.alreadyTakenIds) : []);
+	const playerIdSet = new Set(parseCsvQuery(req.query.playerIds));
+	const positionSet = new Set(parseCsvQuery(req.query.positions));
+	const alreadyTakenIdSet = new Set(parseCsvQuery(req.query.alreadyTakenIds));
 
-	const minPrice = req.query.minPrice !== undefined ? parseOptionalNumberQuery(req.query.minPrice) : undefined;
-	const maxPrice = req.query.maxPrice !== undefined ? parseOptionalNumberQuery(req.query.maxPrice) : undefined;
+	const minPrice = parseOptionalNumberQuery(req.query.minPrice);
+	const maxPrice = parseOptionalNumberQuery(req.query.maxPrice);
 	const nameFilter = parseStringQuery(req.query.name, '');
 
 	try {
@@ -102,7 +102,7 @@ router.get('/players', async (req: Request, res: Response) => {
 });
 
 router.get('/drafts', async (req: Request, res: Response) => {
-	const requestedDraftIds = req.query.draftIds !== undefined ? parseCsvQuery(req.query.draftIds) : [];
+	const requestedDraftIds = parseCsvQuery(req.query.draftIds);
 	// Eventually to be replaced by Database Access
 	const selectedDrafts = requestedDraftIds.length
 		? testDraftDataSet.filter((draft) => requestedDraftIds.includes(draft.id))
@@ -147,7 +147,7 @@ router.get('/drafts', async (req: Request, res: Response) => {
 			);
 
 			return {
-				draftId: draft.id,
+				id: draft.id,
 				slots,
 				totals
 			};
@@ -159,7 +159,68 @@ router.get('/drafts', async (req: Request, res: Response) => {
 		});
 	} catch (error) {
 		console.error('Evaluation drafts API error:', error);
-		return res.status(502).json({ error: 'Failed to fetch draft evaluations' });
+		// Fallback: use getPlayers() and create fallback evaluations
+		try {
+			const fallbackPlayers = await getPlayers();
+			const fallbackEvaluationsByPlayerId: Record<PlayerID, PlayerEvaluation> = Object.fromEntries(
+				fallbackPlayers.map((player) => [
+					player.id,
+					{
+						id: player.id,
+						name: player.name,
+						team: player.team,
+						positions: player.positions,
+						suggestedValue: player.suggestedValue,
+						evaluation: {
+							score: 0,
+							tier: 'N/A',
+							confidence: 0,
+							summary: 'Fallback evaluation - no evaluation data available'
+						}
+					}
+				])
+			);
+
+			const slotsOrder: Position[] = [
+				'C', '1B', '2B', '3B', 'SS', 'CI', 'MI',
+				'OF1', 'OF2', 'OF3', 'OF4', 'OF5',
+				'UTIL',
+				'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'
+			];
+
+			const fallbackDrafts: DraftEvaluation[] = selectedDrafts.map((draft: DraftData) => {
+				const slots = slotsOrder.map((position) => {
+					const playerId = draft.roster[position];
+					const player = playerId ? fallbackEvaluationsByPlayerId[playerId] ?? null : null;
+					return { position, player };
+				});
+
+				const totals = slots.reduce(
+					(acc, slot) => {
+						if (!slot.player) return acc;
+						return {
+							value: acc.value + slot.player.suggestedValue,
+							score: acc.score + slot.player.evaluation.score
+						};
+					},
+					{ value: 0, score: 0 }
+				);
+
+				return {
+					id: draft.id,
+					slots,
+					totals
+				};
+			});
+
+			return res.json({
+				drafts: fallbackDrafts,
+				meta: getEvaluationMeta('backend-fallback', 'Fallback draft evaluations because API evaluation is currently unavailable.')
+			});
+		} catch (fallbackError) {
+			console.error('Evaluation drafts API fallback error:', fallbackError);
+			return res.status(502).json({ error: 'Failed to fetch draft evaluations' });
+		}
 	}
 });
 

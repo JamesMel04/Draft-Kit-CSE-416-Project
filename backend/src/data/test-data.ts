@@ -115,7 +115,9 @@ export const testPlayerDataSet: PlayerData[] = [
 
 export const testDraftDataSet: DraftData[] = [
   {
+    userId: 'anonymous-user',
     id: "draft1",
+    teamName: "Team1",
     roster: {
       ...emptyRoster,
       "C": testPlayerDataSet[0].id,
@@ -123,7 +125,9 @@ export const testDraftDataSet: DraftData[] = [
     }
   },
   {
+    userId: 'anonymous-user',
     id: "draft2",
+    teamName: "Team2",
     roster: {
       ...emptyRoster,
       "C": testPlayerDataSet[2].id,
@@ -134,10 +138,18 @@ export const testDraftDataSet: DraftData[] = [
 
 export const testLeagueDataSet: LeagueData[] = [
   {
+    id: "league1",
     name: "Example League",
+    startingBudget: 300,
     teams: {
-      "TeamManager 1": testDraftDataSet[0],
-      "TeamManager 2": testDraftDataSet[1]
+      "Team1": {
+        "C": testPlayerDataSet[0].id,
+        "1B": testPlayerDataSet[1].id
+      },
+      "Team2": {
+        "C": testPlayerDataSet[2].id,
+        "1B": testPlayerDataSet[3].id
+      }
     }
   }
 ];

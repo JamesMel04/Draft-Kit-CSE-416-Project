@@ -1,39 +1,40 @@
 export type PlayerID = string;
 export type DraftID = string;
+export type LeagueID = string;
 
 export type Position =
-  | "C"
-  | "1B"
-  | "2B"
-  | "3B"
-  | "SS"
-  | "CI"
-  | "MI"
-  | "OF1"
-  | "OF2"
-  | "OF3"
-  | "OF4"
-  | "OF5"
-  | "UTIL"
-  | "P1"
-  | "P2"
-  | "P3"
-  | "P4"
-  | "P5"
-  | "P6"
-  | "P7"
-  | "P8"
-  | "P9";
+  | 'C'
+  | '1B'
+  | '2B'
+  | '3B'
+  | 'SS'
+  | 'CI'
+  | 'MI'
+  | 'OF1'
+  | 'OF2'
+  | 'OF3'
+  | 'OF4'
+  | 'OF5'
+  | 'UTIL'
+  | 'P1'
+  | 'P2'
+  | 'P3'
+  | 'P4'
+  | 'P5'
+  | 'P6'
+  | 'P7'
+  | 'P8'
+  | 'P9';
 
 export type SearchFilterPosition =
-  | "C"
-  | "1B"
-  | "2B"
-  | "3B"
-  | "SS"
-  | "OF"
-  | "P"
-  | "UTIL";
+  | 'C'
+  | '1B'
+  | '2B'
+  | '3B'
+  | 'SS'
+  | 'OF'
+  | 'P'
+  | 'UTIL';
 
 export type PlayerStats = {
   seasons: number[];
@@ -73,12 +74,14 @@ export type DraftSlotEvaluation = {
 };
 
 export type DraftData = {
+  userId: string;
   id: DraftID;
+  teamName: string;
   roster: Record<Position, PlayerID>;
 };
 
 export type DraftEvaluation = {
-  draftId: DraftID;
+  id: DraftID;
   slots: DraftSlotEvaluation[];
   totals: {
     value: number;
@@ -94,8 +97,8 @@ export type EvaluationMeta = {
 };
 
 export type LeagueData = {
+  id: LeagueID;
   name: string;
-  teams: {
-    [teamManager: string]: DraftData;
-  }
+  startingBudget: number;
+  teams: Record<string, Partial<Record<Position, string | null>>>;
 };

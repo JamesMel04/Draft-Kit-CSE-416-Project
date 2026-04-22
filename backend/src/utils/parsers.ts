@@ -60,3 +60,13 @@ export function parseRouteParam(value: string | string[] | undefined): string | 
 
   return value;
 }
+
+export function parseRoster(roster: unknown): Record<string, string> {
+  if (typeof roster !== 'object' || roster === null) {
+    return {};
+  }
+  
+  return Object.fromEntries(
+    Object.entries(roster).map(([key, value]) => [key, parseStringQuery(value, '')])
+  );
+}
