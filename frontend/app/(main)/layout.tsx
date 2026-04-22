@@ -33,7 +33,7 @@ export default function MainLayout({
           <Link href="/">Home</Link>
           <Link href="/profile">Profile</Link>
           <Link href="/players">Player</Link>
-          <Link href="/draft">Draft</Link>
+          <Link href="/league_config">Draft</Link>
           <Link href="/evaluation">Evaluation</Link>
           <Link href="/feed">Sports Feed</Link>
         </div>

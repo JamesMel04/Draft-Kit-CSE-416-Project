@@ -117,7 +117,6 @@ export async function saveDraft(draft: Partial<DraftData>, userId?: string): Pro
                 "x-user-id": userId
             }
         })).data;
-        console.log("Create draft response: ", res);
     return res;
     } catch (err) {
         console.error("Draft creation failed: ", err);

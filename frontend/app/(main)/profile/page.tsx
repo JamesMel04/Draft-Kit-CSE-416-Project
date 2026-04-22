@@ -127,9 +127,14 @@ function renderSettingsPanel(selectedTab: SettingsTabId) {
 }
 
 export default function Profile() {
+    const { user } = useUser();
+    if (user) {
+        profile.displayName = user.name ?? profile.displayName;
+        profile.email = user.email ?? profile.email;
+    }
+
     const initials = getInitials(profile.displayName);
     const [selectedTab, setSelectedTab] = useState<SettingsTabId>("league");
-    const [apiKeyInput, setApiKeyInput] = useState("");
 
     return (
         <div className="space-y-6 text-slate-900">

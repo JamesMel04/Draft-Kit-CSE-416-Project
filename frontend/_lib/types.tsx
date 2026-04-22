@@ -1,6 +1,7 @@
 /* This file should generally match the types file for the server */
 export type PlayerID = string;
 export type DraftID = string;
+export type LeagueID = string;
 
 export type Position =
   | "C"
@@ -89,10 +90,10 @@ export type EvaluationMeta = {
 };
 
 export type LeagueData = {
+  id: LeagueID;
   name: string;
-  teams: {
-    [teamManager: string]: DraftData;
-  }
+  startingBudget: number;
+  teams: Record<string, Partial<Record<Position, string | null>>>;
 };
 
 export type SortField = string;
