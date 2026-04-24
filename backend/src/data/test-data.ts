@@ -143,12 +143,18 @@ export const testLeagueDataSet: LeagueData[] = [
     startingBudget: 300,
     teams: {
       "Team1": {
-        "C": testPlayerDataSet[0].id,
-        "1B": testPlayerDataSet[1].id
+        roster: {
+          ...emptyRoster,
+          "C": testPlayerDataSet[0].id,
+          "1B": testPlayerDataSet[1].id
+        }
       },
       "Team2": {
-        "C": testPlayerDataSet[2].id,
-        "1B": testPlayerDataSet[3].id
+        roster: {
+          ...emptyRoster,
+          "C": testPlayerDataSet[2].id,
+          "1B": testPlayerDataSet[3].id
+        }
       }
     }
   }

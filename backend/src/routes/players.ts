@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { PlayerData } from '@/types';
+import { PlayerData, PlayerID } from '@/types';
 import { getPlayers } from '@/utils/api';
 import { parseStringQuery } from '@/utils/parsers';
 
@@ -18,7 +18,13 @@ router.get('/', async (req: Request, res: Response) => {
   };
 
   try {
-    const players = filterByName(await getPlayers());
+    const {hitters, pitchers} = await getPlayers();
+    const playersMap = new Map<PlayerID, PlayerData>();
+    for (const player of [...hitters, ...pitchers]) {
+      playersMap.set(player.id, player);
+    }
+    const players = filterByName(Array.from(playersMap.values()));
+
     return res.json({ players });
   } catch (error) {
     console.error('API Error:', error);
@@ -29,7 +35,8 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
-    const players = await getPlayers();
+    const {hitters, pitchers} = await getPlayers();
+    const players = [...hitters, ...pitchers];
     const playerData = players.find(p => p.id === id);
     res.json({ player: playerData });
   } catch (error) {

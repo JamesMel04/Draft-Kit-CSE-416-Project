@@ -1,7 +1,9 @@
 
 import axios from 'axios';
-import { PlayerData, PlayerEvaluation } from '@/types';
+import { PlayerData, PlayerEvaluation, PlayerID, PlayerPools, PlayerValuation, ValuationRequest } from '@/types';
 import { requiredEnv } from "@/utils/env-reader";
+import { converPlayerPoolsToPlayerData, convertPlayerToPlayerData, convertPlayerValuationToEvaluation } from '@/utils/api-type-converter';
+import { API_KEY } from '@/consts';
 
 type QueryParamValue = string | number | boolean | undefined;
 type QueryParams = Record<string, QueryParamValue>;
@@ -11,7 +13,10 @@ const API_URL = requiredEnv('API_URL');
 const api = axios.create({
   baseURL: API_URL,
   timeout: 5000,
-  headers: { 'Content-Type': 'application/json' }
+  headers: {
+    'Content-Type': 'application/json',
+    "mlb-api-key": API_KEY
+  }
 });
 
 function cleanParams(params: QueryParams): Record<string, string | number | boolean> {
@@ -20,10 +25,11 @@ function cleanParams(params: QueryParams): Record<string, string | number | bool
   ) as Record<string, string | number | boolean>;
 }
 
-export async function getPlayers(): Promise<PlayerData[]> {
+export async function getPlayers(): Promise<{hitters: PlayerData[], pitchers: PlayerData[]}> {
   try {
-    const { data } = await api.get<PlayerData[]>('/players');
-    return data ?? [];
+    const { data } = await api.get<PlayerPools>('/players');
+    const cleanedData = converPlayerPoolsToPlayerData(data);
+    return cleanedData ?? {hitters: [], pitchers: []};
   } catch (err) {
     console.error('Players fetch failed:', err);
     throw err;
@@ -31,12 +37,25 @@ export async function getPlayers(): Promise<PlayerData[]> {
 }
 
 
-export async function getPlayerEvaluations(params: QueryParams = {}): Promise<PlayerEvaluation[]> {
+export async function getPlayerEvaluations(requestBody: ValuationRequest | undefined): Promise<PlayerEvaluation[]> {
   try {
-    const { data } = await api.get<PlayerEvaluation[]>('/evaluation/players', {
-      params: cleanParams(params),
-    });
-    return data ?? [];
+    const {hitters, pitchers} = await getPlayers();
+    const playersMap = new Map<PlayerID, PlayerData>();
+    for (const player of [...hitters, ...pitchers]) {
+      playersMap.set(player.id, player);
+    }
+    const players = Array.from(playersMap.values());
+
+    const { data } = await api.post<PlayerValuation[]>('/players/valuations', {...requestBody});
+
+    const valuated_players = players.filter((player) => data.some((valuation) => valuation.id === player.id));
+    const evaluations = data.map((valuation) => {
+      const player = valuated_players.find((p) => p.id === valuation.id);
+      if (player) {
+        return convertPlayerValuationToEvaluation(player, valuation);
+      }
+    }).filter((v): v is PlayerEvaluation => !!v);
+    return evaluations;
   } catch (err) {
     console.error('Evaluated players fetch failed:', err);
     throw err;
