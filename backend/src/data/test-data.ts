@@ -2,33 +2,33 @@ import { PlayerData, DraftData, LeagueData } from '@/types';
 
 // Draft rosters are typed as full slot maps; empty string means slot not filled yet.
 const emptyRoster: DraftData["roster"] = {
-  "C": "",
-  "1B": "",
-  "2B": "",
-  "3B": "",
-  "SS": "",
-  "CI": "",
-  "MI": "",
-  "OF1": "",
-  "OF2": "",
-  "OF3": "",
-  "OF4": "",
-  "OF5": "",
-  "UTIL": "",
-  "P1": "",
-  "P2": "",
-  "P3": "",
-  "P4": "",
-  "P5": "",
-  "P6": "",
-  "P7": "",
-  "P8": "",
-  "P9": "",
+  "C": undefined,
+  "1B": undefined,
+  "2B": undefined,
+  "3B": undefined,
+  "SS": undefined,
+  "CI": undefined,
+  "MI": undefined,
+  "OF1": undefined,
+  "OF2": undefined,
+  "OF3": undefined,
+  "OF4": undefined,
+  "OF5": undefined,
+  "UTIL": undefined,
+  "P1": undefined,
+  "P2": undefined,
+  "P3": undefined,
+  "P4": undefined,
+  "P5": undefined,
+  "P6": undefined,
+  "P7": undefined,
+  "P8": undefined,
+  "P9": undefined,
 };
 
 export const testPlayerDataSet: PlayerData[] = [
   {
-    id: "player1",
+    id: 1,
     name: "PlayerName 1",
     team: "PlayerTeam 1",
     positions: ["OF1"],
@@ -49,7 +49,7 @@ export const testPlayerDataSet: PlayerData[] = [
     }
   },
   {
-    id: "player2",
+    id: 2,
     name: "PlayerName 2",
     team: "PlayerTeam 2",
     positions: ["OF1"],
@@ -70,7 +70,7 @@ export const testPlayerDataSet: PlayerData[] = [
     }
   },
   {
-    id: "player3",
+    id: 3,
     name: "PlayerName 3",
     team: "PlayerTeam 3",
     positions: ["OF1"],
@@ -91,7 +91,7 @@ export const testPlayerDataSet: PlayerData[] = [
     }
   },
   {
-    id: "player4",
+    id: 4,
     name: "PlayerName 4",
     team: "PlayerTeam 4",
     positions: ["OF1"],

@@ -1,8 +1,7 @@
 import { requiredEnv } from "@/utils/env-reader";
 import { LeagueSettings, LeagueState} from "@/types";
 
-export const API_KEY = requiredEnv('API_KEY');
-
+export const MLB_API_KEY = requiredEnv('MLB_API_KEY');
 
 export const HITTER_SCORING_CATEGORIES = [
     "r",
@@ -62,5 +61,9 @@ export const defaultLeagueSettings: LeagueSettings = {
 };
 
 export const defaultLeagueState: LeagueState = {
-    teams: {}
+    teams: {
+        "DefaultTeamName": {
+            roster: {}
+        }
+    }
 };

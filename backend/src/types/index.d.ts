@@ -1,6 +1,6 @@
 import { HITTER_SCORING_CATEGORIES, PITCHER_SCORING_CATEGORIES, ROSTER_SLOTS } from "@/consts";
 
-export type PlayerID = string;
+export type PlayerID = number;
 export type DraftID = string;
 export type LeagueID = string;
 export type TeamName = string; // User made team name
@@ -75,14 +75,14 @@ export type DraftSlotEvaluation = {
 };
 
 export type RosterData = {
-  roster: Partial<Record<Position, PlayerID>>;
+  roster: Partial<Record<Position, PlayerID | undefined>>;
 };
 
 export type DraftData = {
   userId: string;
   id: DraftID;
   teamName: string;
-  roster: Record<Position, PlayerID>;
+  roster: Partial<Record<Position, PlayerID | undefined>>;
 };
 
 export type DraftEvaluation = {

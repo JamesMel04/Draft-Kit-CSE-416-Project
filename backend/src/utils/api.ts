@@ -2,8 +2,8 @@
 import axios from 'axios';
 import { PlayerData, PlayerEvaluation, PlayerID, PlayerPools, PlayerValuation, ValuationRequest } from '@/types';
 import { requiredEnv } from "@/utils/env-reader";
-import { converPlayerPoolsToPlayerData, convertPlayerToPlayerData, convertPlayerValuationToEvaluation } from '@/utils/api-type-converter';
-import { API_KEY } from '@/consts';
+import { converPlayerPoolsToPlayerData, convertPlayerValuationToEvaluation } from '@/utils/api-type-converter';
+import { MLB_API_KEY } from '@/consts';
 
 type QueryParamValue = string | number | boolean | undefined;
 type QueryParams = Record<string, QueryParamValue>;
@@ -15,7 +15,7 @@ const api = axios.create({
   timeout: 5000,
   headers: {
     'Content-Type': 'application/json',
-    "mlb-api-key": API_KEY
+    "mlb-api-key": MLB_API_KEY
   }
 });
 
@@ -36,25 +36,26 @@ export async function getPlayers(): Promise<{hitters: PlayerData[], pitchers: Pl
   }
 }
 
-
 export async function getPlayerEvaluations(requestBody: ValuationRequest | undefined): Promise<PlayerEvaluation[]> {
   try {
-    const {hitters, pitchers} = await getPlayers();
+    const { hitters, pitchers } = await getPlayers();
+
     const playersMap = new Map<PlayerID, PlayerData>();
     for (const player of [...hitters, ...pitchers]) {
       playersMap.set(player.id, player);
     }
-    const players = Array.from(playersMap.values());
 
-    const { data } = await api.post<PlayerValuation[]>('/players/valuations', {...requestBody});
+    const { data } = await api.post<PlayerValuation[]>('/players/valuations', { ...requestBody });
 
-    const valuated_players = players.filter((player) => data.some((valuation) => valuation.id === player.id));
-    const evaluations = data.map((valuation) => {
-      const player = valuated_players.find((p) => p.id === valuation.id);
-      if (player) {
-        return convertPlayerValuationToEvaluation(player, valuation);
-      }
-    }).filter((v): v is PlayerEvaluation => !!v);
+    const evaluationsMap = new Map<PlayerID, PlayerEvaluation>();
+    for (const valuation of data) {
+      const player = playersMap.get(valuation.id);
+      if (!player) continue;
+      evaluationsMap.set(valuation.id, convertPlayerValuationToEvaluation(player, valuation));
+    }
+
+    const evaluations = Array.from(evaluationsMap.values());
+
     return evaluations;
   } catch (err) {
     console.error('Evaluated players fetch failed:', err);

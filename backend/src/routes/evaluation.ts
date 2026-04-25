@@ -31,12 +31,14 @@ function getEvaluationMeta(provider: string, notes: string): EvaluationMeta {
 	};
 }
 
-router.get('/players', async (req: Request, res: Response) => {
+router.post('/players', async (req: Request, res: Response) => {
 	try {
 		const leagueData: LeagueData | undefined = req.body.leagueData;
-		const playerIdSet = new Set(parseCsvQuery(req.query.playerIds));
+		const playerStringIdSet = new Set(parseCsvQuery(req.query.playerIds));
+		const playerIdSet = new Set(Array.from(playerStringIdSet).map(id => Number(id)));
 		const positionSet = new Set(parseCsvQuery(req.query.positions));
-		const alreadyTakenIdSet = new Set(parseCsvQuery(req.query.alreadyTakenIds));
+		const alreadyTakenStringIdSet = new Set(parseCsvQuery(req.query.alreadyTakenIds));
+		const alreadyTakenIdSet = new Set(Array.from(alreadyTakenStringIdSet).map(id => Number(id)));
 
 		const minPrice = parseOptionalNumberQuery(req.query.minPrice);
 		const maxPrice = parseOptionalNumberQuery(req.query.maxPrice);

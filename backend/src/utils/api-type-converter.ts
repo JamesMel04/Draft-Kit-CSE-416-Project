@@ -22,7 +22,7 @@ export function convertSeasonStatsToPlayerStats(seasonStats: SeasonStats): Playe
 
 export function convertPlayerToPlayerData(player: Player): PlayerData {
 	return {
-		id: player.id.toString(),
+		id: player.id,
 		name: player.name,
 		team: player.team,
 		positions: player.positions,
@@ -42,7 +42,9 @@ export function converPlayerPoolsToPlayerData(pools: PlayerPools): { hitters: Pl
 	};
 }
 
-export function convertLeagueDataToLeagueSettings(leagueData: LeagueData): LeagueSettings {
+export function convertLeagueDataToLeagueSettings(leagueData: LeagueData): LeagueSettings | undefined {
+	if (!leagueData.startingBudget || !leagueData.teams) return;
+
 	return {
 		budget: leagueData.startingBudget,
 		teamCount: leagueData.teams ? Object.keys(leagueData.teams).length : 0,
@@ -50,7 +52,17 @@ export function convertLeagueDataToLeagueSettings(leagueData: LeagueData): Leagu
 	};
 }
 
-export function convertLeagueDataToLeagueState(leagueData: LeagueData): LeagueState {
+export function convertLeagueDataToLeagueState(leagueData: LeagueData): LeagueState | undefined {
+	if (!leagueData.teams) return;
+
+	Object.entries(leagueData.teams).forEach(([teamName, rosterData]) => {
+		if (!rosterData) {
+			leagueData.teams[teamName] = { roster: {} };
+		} else if (!rosterData.roster) {
+			rosterData.roster = {};
+		}
+	});
+
 	return {
 		teams: leagueData.teams
 	};

@@ -33,8 +33,8 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 router.get('/:id', async (req: Request, res: Response) => {
-  const { id } = req.params;
   try {
+    const id = Number(req.params.id);
     const {hitters, pitchers} = await getPlayers();
     const players = [...hitters, ...pitchers];
     const playerData = players.find(p => p.id === id);
@@ -46,8 +46,8 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 router.get('/:id/notes', async (req: Request, res: Response) => {
-  const { id } = req.params;
   try {
+    const id = Number(req.params.id);
     const notes = "Notes"; // Get notes from database based on id
     res.json({ notes });
   } catch (error) {
@@ -57,9 +57,9 @@ router.get('/:id/notes', async (req: Request, res: Response) => {
 });
 
 router.post('/:id/notes', async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { content } = req.body;
   try {
+    const id = Number(req.params.id);
+    const { content } = req.body;
     // Save notes to database based on id
     res.json({ notes: { id, content }, status: 'saved' });
   } catch (error) {

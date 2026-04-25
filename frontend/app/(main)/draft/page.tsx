@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PlayerEvaluation, Position, DraftData, PlayerData } from '@/_lib/types';
+import { PlayerEvaluation, Position, DraftData, PlayerData, LeagueData } from '@/_lib/types';
 import { getPlayers, saveDraft } from '@/_lib/api';
 import { allPositions, allSearchFilterPositions } from '@/_lib/consts';
 import { getEvaluatedPlayers } from '@/_lib/api';
@@ -40,7 +40,7 @@ export default function Draft() {
   // -------------------------
   // CONFIG FROM SESSION STORAGE
   // -------------------------
-  const [config, setConfig] = useState<any>(null);
+  const [config, setConfig] = useState<LeagueData>();
 
   useEffect(() => {
     const raw = sessionStorage.getItem("draftConfig");
@@ -319,7 +319,7 @@ export default function Draft() {
       }
       try {
         setEvaluationLoading(true);
-        const response = await getEvaluatedPlayers({ name: activePlayerName });
+        const response = await getEvaluatedPlayers({name: activePlayerName });
         const exact = response.players.find(
           (p) => p.name.toLowerCase() === activePlayerName.toLowerCase()
         );
@@ -678,6 +678,7 @@ export default function Draft() {
             ...base,
             alreadyTakenIds: filterTakenPlayers ? Array.from(takenPlayerIds) : undefined,
           })}
+          leagueData={config}
         />
       </div>
     </div>
