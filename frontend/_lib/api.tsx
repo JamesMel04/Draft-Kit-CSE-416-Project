@@ -13,6 +13,7 @@ import {
     DraftID,
     PlayerID,
     DraftData,
+    LeagueData,
 } from '@/_lib/types';
 import { BACKEND_URL } from '@/_lib/consts';
 
@@ -58,11 +59,11 @@ export async function getPlayers(params : PlayerQueryParams) : Promise<PlayerGet
     }
 }
 
-export async function getEvaluatedPlayers(filters: PlayerEvaluationQueryParams = {}): Promise<PlayerEvaluationResponse> {
+export async function getEvaluatedPlayers(filters: PlayerEvaluationQueryParams = {}, leagueData?: LeagueData): Promise<PlayerEvaluationResponse> {
     try {
         const queryPositions = filters.positions?.length ? Array.from(new Set(filters.positions.flatMap((pos) => (pos.toUpperCase() === "P" ? ["P", "SP", "RP"] : [pos])))) : undefined;
 
-        const res = (await api.get<PlayerEvaluationResponse>(`/evaluation/players`, {
+        const res = (await api.post<PlayerEvaluationResponse>(`/evaluation/players`, {leagueData: {test: "test"}}, {
             params: cleanParams({
                 playerIds: filters.playerIds?.length ? filters.playerIds.join(",") : undefined,
                 positions: queryPositions?.length ? queryPositions.join(",") : undefined,

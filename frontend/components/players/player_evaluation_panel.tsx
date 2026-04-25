@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/24/outline';
-import { PlayerEvaluation, PlayerEvaluationQueryParams, EvaluationMeta, Position, SortAsc, SortField } from '@/_lib/types';
+import { PlayerEvaluation, PlayerEvaluationQueryParams, EvaluationMeta, Position, SortAsc, SortField, LeagueData } from '@/_lib/types';
 import { getEvaluatedPlayers } from '@/_lib/api';
 import { sortEvaluatedPlayers } from '@/utils/sorters';
 
@@ -28,6 +28,7 @@ type PlayerEvaluationPanelProps = {
     players: PlayerEvaluation[];
     meta: EvaluationMeta | null;
   }) => void;
+  leagueData?: LeagueData;
 };
 
 export default function PlayerEvaluationPanel({
@@ -43,6 +44,7 @@ export default function PlayerEvaluationPanel({
   hiddenPlayerIds,
   buildFilters,
   onResultsChange,
+  leagueData = undefined,
 }: PlayerEvaluationPanelProps) {
   const [source, setSource] = useState<"backend" | "fallback" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +94,7 @@ export default function PlayerEvaluationPanel({
       };
 
       const filters = buildFilters ? buildFilters(baseFilters) : baseFilters;
-      const response = await getEvaluatedPlayers(filters);
+      const response = await getEvaluatedPlayers(filters, leagueData);
 
       setPlayers(response.players);
       setSource(response.meta.source);
