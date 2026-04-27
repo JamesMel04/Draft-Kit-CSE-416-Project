@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { PlayerData, PlayerID } from '@/types';
+import { HitterPlayer, PitcherPlayer, Player, PlayerData, PlayerID, PlayerPools } from '@/types';
 import { getPlayers } from '@/utils/api';
 import { parseStringQuery } from '@/utils/parsers';
 
@@ -8,7 +8,7 @@ const router = Router();
 router.get('/', async (req: Request, res: Response) => {
   const name = parseStringQuery(req.query.name, '');
 
-  const filterByName = (players: PlayerData[]) => {
+  const filterByName = (players: Player[]) => {
     if (!name) {
       return players;
     }
@@ -19,13 +19,21 @@ router.get('/', async (req: Request, res: Response) => {
 
   try {
     const {hitters, pitchers} = await getPlayers();
-    const playersMap = new Map<PlayerID, PlayerData>();
-    for (const player of [...hitters, ...pitchers]) {
-      playersMap.set(player.id, player);
-    }
-    const players = filterByName(Array.from(playersMap.values()));
 
-    return res.json({ players });
+    // Two maps for hitters and pitchers
+    const hittersMap = new Map<PlayerID, Player>();
+    const pitchersMap = new Map<PlayerID, Player>();
+    // Create two mappings
+    for (const player of hitters) {
+      hittersMap.set(player.id, player);
+    }
+    for(const player of pitchers) {
+      pitchersMap.set(player.id, player);
+    }
+    const hitterPlayers = filterByName(Array.from(hittersMap.values()));
+    const pitcherPlayers = filterByName(Array.from(pitchersMap.values()));
+    return res.json({ hitters: hitterPlayers, pitchers: pitcherPlayers });
+
   } catch (error) {
     console.error('API Error:', error);
     return res.status(500).json({ error: 'Failed to fetch player data' });

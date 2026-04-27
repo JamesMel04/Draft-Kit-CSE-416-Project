@@ -35,7 +35,7 @@ export function convertPlayerToPlayerData(player: Player): PlayerData {
 	};
 }
 
-export function converPlayerPoolsToPlayerData(pools: PlayerPools): { hitters: PlayerData[]; pitchers: PlayerData[] } {
+export function convertPlayerPoolsToPlayerData(pools: PlayerPools): { hitters: PlayerData[]; pitchers: PlayerData[] } {
 	return {
 		hitters: pools.hitters.map(convertPlayerToPlayerData),
 		pitchers: pools.pitchers.map(convertPlayerToPlayerData)

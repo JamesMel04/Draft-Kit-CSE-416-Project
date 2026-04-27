@@ -166,7 +166,7 @@ export interface PitcherSeasonStats extends SeasonStats {
 }
 
 export interface Player {
-    id: number;
+    id: PlayerID;
     name: string;
     team: string;
     teamId: number;

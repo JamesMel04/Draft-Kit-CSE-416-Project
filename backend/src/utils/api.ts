@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { PlayerData, PlayerEvaluation, PlayerID, PlayerPools, PlayerValuation, ValuationRequest } from '@/types';
 import { requiredEnv } from "@/utils/env-reader";
-import { converPlayerPoolsToPlayerData, convertPlayerValuationToEvaluation } from '@/utils/api-type-converter';
+import { convertPlayerPoolsToPlayerData, convertPlayerToPlayerData, convertPlayerValuationToEvaluation } from '@/utils/api-type-converter';
 import { MLB_API_KEY } from '@/consts';
 
 type QueryParamValue = string | number | boolean | undefined;
@@ -25,11 +25,11 @@ function cleanParams(params: QueryParams): Record<string, string | number | bool
   ) as Record<string, string | number | boolean>;
 }
 
-export async function getPlayers(): Promise<{hitters: PlayerData[], pitchers: PlayerData[]}> {
+// Returns the PlayerPools from the /players API endpoint
+export async function getPlayers(): Promise<PlayerPools> {
   try {
     const { data } = await api.get<PlayerPools>('/players');
-    const cleanedData = converPlayerPoolsToPlayerData(data);
-    return cleanedData ?? {hitters: [], pitchers: []};
+    return data ?? {hitters: [], pitchers: []};
   } catch (err) {
     console.error('Players fetch failed:', err);
     throw err;
@@ -38,7 +38,7 @@ export async function getPlayers(): Promise<{hitters: PlayerData[], pitchers: Pl
 
 export async function getPlayerEvaluations(requestBody: ValuationRequest | undefined): Promise<PlayerEvaluation[]> {
   try {
-    const { hitters, pitchers } = await getPlayers();
+    const { hitters, pitchers } = convertPlayerPoolsToPlayerData(await getPlayers());
 
     const playersMap = new Map<PlayerID, PlayerData>();
     for (const player of [...hitters, ...pitchers]) {
