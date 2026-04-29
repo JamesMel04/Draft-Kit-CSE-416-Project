@@ -32,7 +32,7 @@ router.get('/', async (req: Request, res: Response) => {
     }
     const hitterPlayers = filterByName(Array.from(hittersMap.values()));
     const pitcherPlayers = filterByName(Array.from(pitchersMap.values()));
-    return res.json({ hitters: hitterPlayers, pitchers: pitcherPlayers });
+    return res.json({ players: { hitters: hitterPlayers, pitchers: pitcherPlayers } });
 
   } catch (error) {
     console.error('API Error:', error);
