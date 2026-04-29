@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { PlayerData, PlayerID } from '@/types';
-import { getPlayers } from '@/utils/api';
-import { parseStringQuery } from '@/utils/parsers';
+import { PlayerData, PlayerID } from '../types';
+import { getPlayers } from '../utils/api';
+import { parseStringQuery } from '../utils/parsers';
 
 const router = Router();
 

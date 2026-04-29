@@ -1,4 +1,4 @@
-import { PlayerData, DraftData, LeagueData } from '@/types';
+import { PlayerData, DraftData, LeagueData } from '../types';
 
 // Draft rosters are typed as full slot maps; empty string means slot not filled yet.
 const emptyRoster: DraftData["roster"] = {

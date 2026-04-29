@@ -1,4 +1,4 @@
-import { HITTER_SCORING_CATEGORIES, PITCHER_SCORING_CATEGORIES, ROSTER_SLOTS } from "@/consts";
+import { HITTER_SCORING_CATEGORIES, PITCHER_SCORING_CATEGORIES, ROSTER_SLOTS } from "../consts";
 
 export type PlayerID = number;
 export type DraftID = string;

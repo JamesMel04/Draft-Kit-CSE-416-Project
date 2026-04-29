@@ -1,9 +1,9 @@
 
 import axios from 'axios';
-import { PlayerData, PlayerEvaluation, PlayerID, PlayerPools, PlayerValuation, ValuationRequest } from '@/types';
-import { requiredEnv } from "@/utils/env-reader";
-import { converPlayerPoolsToPlayerData, convertPlayerValuationToEvaluation } from '@/utils/api-type-converter';
-import { MLB_API_KEY } from '@/consts';
+import { PlayerData, PlayerEvaluation, PlayerID, PlayerPools, PlayerValuation, ValuationRequest } from '../types';
+import { requiredEnv } from "../utils/env-reader";
+import { converPlayerPoolsToPlayerData, convertPlayerValuationToEvaluation } from '../utils/api-type-converter';
+import { MLB_API_KEY } from '../consts';
 
 type QueryParamValue = string | number | boolean | undefined;
 type QueryParams = Record<string, QueryParamValue>;

@@ -2,12 +2,12 @@ import express, {Request, Response} from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
 import cors from 'cors';
-import { optionalEnv } from '@/utils/env-reader';
+import { optionalEnv } from './utils/env-reader';
 
-import playersRouter from '@/routes/players';
-import compareRouter from '@/routes/compare';
-import draftsRouter from '@/routes/drafts';
-import evaluationRouter from '@/routes/evaluation';
+import playersRouter from './routes/players';
+import compareRouter from './routes/compare';
+import draftsRouter from './routes/drafts';
+import evaluationRouter from './routes/evaluation';
 
 dotenv.config();
 

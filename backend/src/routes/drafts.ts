@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { testDraftDataSet } from '@/data/test-data';
+import { testDraftDataSet } from '../data/test-data';
 import { randomUUID } from 'crypto';
-import { DraftData } from '@/types';
-import { parseStringQuery, parseRoster } from '@/utils/parsers';
+import { DraftData } from '../types';
+import { parseStringQuery, parseRoster } from '../utils/parsers';
 
 const router = Router();
 
