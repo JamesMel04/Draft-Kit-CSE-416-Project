@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PlayerEvaluation, Position, DraftData, PlayerData, LeagueData, TeamName } from '@/_lib/types';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { PlayerEvaluation, Position, DraftData, PlayerData, LeagueData, TeamName, PlayerID } from '@/_lib/types';
 import { getPlayers, saveDraft, getEvaluatedPlayers } from '@/_lib/api';
 import { allPositions, allSearchFilterPositions } from '@/_lib/consts';
 import PlayerEvaluationPanel from '@/components/players/player_evaluation_panel';
@@ -13,6 +13,7 @@ import { usePlayerAssignment } from '@/components/draft/usePlayerAssignment';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ViewMode = "hitters" | "pitchers" | "all";
+type DraftPrices = Record<TeamName, Partial<Record<Position, number>>>;
 
 const PITCHER_POSITIONS = new Set<Position>(["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"]);
 const VIEW_MODES: ViewMode[] = ["hitters", "pitchers", "all"];
@@ -68,22 +69,76 @@ export default function Draft() {
     isTargetForPending,
   } = useCellActions(movePlayer, swapPlayers);
 
-  // Budgets — computed display only, derived from spent player values ─────────
+  // Draft Prices — keyed by team + position, set at add-time via modal ────────
+  const [draftPrices, setDraftPrices] = useState<DraftPrices>({});
+
+  const setDraftPrice = useCallback((team: TeamName, pos: Position, price: number) => {
+    setDraftPrices((prev) => ({
+      ...prev,
+      [team]: { ...prev[team], [pos]: price },
+    }));
+  }, []);
+
+  const clearDraftPrice = useCallback((team: TeamName, pos: Position) => {
+    setDraftPrices((prev) => {
+      const teamPrices = { ...prev[team] };
+      delete teamPrices[pos];
+      return { ...prev, [team]: teamPrices };
+    });
+  }, []);
+
+  // Budget — derived from draftPrices ────────────────────────────────────────
   const startingBudget = config?.startingBudget ?? 260;
 
   const budgetRemaining = useMemo(() => {
     const remaining: Record<TeamName, number> = {};
     teams.forEach((team) => {
       const spent = allPositions.reduce((sum, pos) => {
-        const playerId = rosterIds[team]?.roster[pos];
-        if (!playerId) return sum;
-        const player = players.find((p) => p.id === playerId);
-        return sum + (player?.priceSold ?? 0);
+        return sum + (draftPrices[team]?.[pos] ?? 0);
       }, 0);
       remaining[team] = startingBudget - spent;
     });
     return remaining;
-  }, [teams, rosterIds, players, startingBudget]);
+  }, [teams, draftPrices, startingBudget]);
+
+  // Price Modal ──────────────────────────────────────────────────────────────
+  type PendingAdd = { team: TeamName; pos: Position; playerName: string; playerId: PlayerID };
+  const [pendingAdd, setPendingAdd] = useState<PendingAdd | null>(null);
+
+  // Called by usePlayerAssignment when user clicks Add
+  const handleRequestAdd = useCallback((
+    team: TeamName,
+    pos: Position,
+    playerName: string,
+    playerId: PlayerID
+  ) => {
+    setPendingAdd({ team, pos, playerName, playerId });
+  }, []);
+
+  const handleConfirmAdd = useCallback((price: number) => {
+    if (!pendingAdd) return;
+    const { team, pos, playerName, playerId } = pendingAdd;
+    updateCell(team, pos, playerName, playerId);
+    setDraftPrice(team, pos, price);
+    setPendingAdd(null);
+  }, [pendingAdd, updateCell, setDraftPrice]);
+
+  const handleCancelAdd = useCallback(() => setPendingAdd(null), []);
+
+  // Remove also clears the stored price ─────────────────────────────────────
+  const handleRemove = useCallback((team: TeamName, pos: Position) => {
+    updateCell(team, pos);
+    clearDraftPrice(team, pos);
+    clearActionState();
+  }, [updateCell, clearDraftPrice, clearActionState]);
+
+  // Player Assignment (search panel) ────────────────────────────────────────
+  const { columns: availablePlayerColumns } = usePlayerAssignment(
+    teams,
+    rosterNames,
+    takenPlayerIds,
+    handleRequestAdd,
+  );
 
   // Submit ───────────────────────────────────────────────────────────────────
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
@@ -140,14 +195,6 @@ export default function Draft() {
     return () => { cancelled = true; };
   }, [activePlayerName]);
 
-  // Player Assignment (search panel) ────────────────────────────────────────
-  const { columns: availablePlayerColumns } = usePlayerAssignment(
-    teams,
-    rosterNames,
-    takenPlayerIds,
-    updateCell
-  );
-
   // View ─────────────────────────────────────────────────────────────────────
   const [viewMode, setViewMode] = useState<ViewMode>("hitters");
   const [filterTakenPlayers, setFilterTakenPlayers] = useState(true);
@@ -162,6 +209,16 @@ export default function Draft() {
 
   return (
     <div className="space-y-6">
+
+      {/* Price Modal */}
+      {pendingAdd && (
+        <PriceModal
+          playerName={pendingAdd.playerName}
+          team={pendingAdd.team}
+          onConfirm={handleConfirmAdd}
+          onCancel={handleCancelAdd}
+        />
+      )}
 
       {/* Save */}
       <SaveBar
@@ -192,8 +249,9 @@ export default function Draft() {
         menuCell={menuCell}
         pendingAction={pendingAction}
         budgetRemaining={budgetRemaining}
+        draftPrices={draftPrices}
         onToggleMenuCell={toggleMenuCell}
-        onRemove={(team, pos) => { updateCell(team, pos); clearActionState(); }}
+        onRemove={handleRemove}
         onStartAction={startAction}
         onApplyPending={applyPendingAction}
         isTargetForPending={isTargetForPending}
@@ -226,6 +284,83 @@ export default function Draft() {
           })}
           leagueData={config}
         />
+      </div>
+    </div>
+  );
+}
+
+// ─── Price Modal ──────────────────────────────────────────────────────────────
+
+function PriceModal({
+  playerName,
+  team,
+  onConfirm,
+  onCancel,
+}: {
+  playerName: string;
+  team: TeamName;
+  onConfirm: (price: number) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+
+  const handleSubmit = () => {
+    const price = Number(value);
+    if (!value || isNaN(price) || price < 0) return;
+    onConfirm(price);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleSubmit();
+    if (e.key === "Escape") onCancel();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-2xl">
+        <h2 className="text-base font-bold text-slate-900">Set Draft Price</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          What did <span className="font-semibold text-slate-700">{playerName}</span> sell for on{" "}
+          <span className="font-semibold text-slate-700">{team}</span>?
+        </p>
+
+        <div className="mt-4 flex items-center gap-2">
+          <span className="text-lg font-bold text-emerald-700">$</span>
+          <input
+            ref={inputRef}
+            type="number"
+            min={0}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="0"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!value || isNaN(Number(value)) || Number(value) < 0}
+            className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
+          >
+            Confirm
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -366,6 +501,7 @@ function RosterGrid({
   menuCell,
   pendingAction,
   budgetRemaining,
+  draftPrices,
   onToggleMenuCell,
   onRemove,
   onStartAction,
@@ -379,6 +515,7 @@ function RosterGrid({
   menuCell: ReturnType<typeof useCellActions>['menuCell'];
   pendingAction: ReturnType<typeof useCellActions>['pendingAction'];
   budgetRemaining: Record<TeamName, number>;
+  draftPrices: DraftPrices;
   onToggleMenuCell: (team: TeamName, pos: Position) => void;
   onRemove: (team: TeamName, pos: Position) => void;
   onStartAction: (type: "move" | "swap", source: { team: TeamName; pos: Position }) => void;
@@ -415,6 +552,7 @@ function RosterGrid({
                 team={team}
                 pos={pos}
                 playerName={rosterNames[team]?.roster[pos]}
+                draftPrice={draftPrices[team]?.[pos]}
                 isSelected={menuCell?.team === team && menuCell?.pos === pos}
                 isPendingSource={pendingAction?.source.team === team && pendingAction?.source.pos === pos}
                 isPendingTarget={isTargetForPending(team, pos)}
@@ -436,6 +574,7 @@ function RosterGrid({
 
 function RosterCell({
   playerName,
+  draftPrice,
   isSelected,
   isPendingSource,
   isPendingTarget,
@@ -450,6 +589,7 @@ function RosterCell({
   team: TeamName;
   pos: Position;
   playerName?: string;
+  draftPrice?: number;
   isSelected: boolean;
   isPendingSource: boolean;
   isPendingTarget: boolean;
@@ -475,7 +615,12 @@ function RosterCell({
       {playerName ? (
         <div className="space-y-1">
           <div className="flex items-center justify-between gap-2">
-            <span className="block font-medium text-slate-900">{playerName}</span>
+            <div>
+              <span className="block font-medium text-slate-900">{playerName}</span>
+              {draftPrice !== undefined && (
+                <span className="text-xs font-semibold text-emerald-700">${draftPrice}</span>
+              )}
+            </div>
             {showInlineCancel ? (
               <button
                 type="button"

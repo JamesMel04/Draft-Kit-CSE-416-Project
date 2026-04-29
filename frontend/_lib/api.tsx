@@ -63,7 +63,7 @@ export async function getEvaluatedPlayers(filters: PlayerEvaluationQueryParams =
     try {
         const queryPositions = filters.positions?.length ? Array.from(new Set(filters.positions.flatMap((pos) => (pos.toUpperCase() === "P" ? ["P", "SP", "RP"] : [pos])))) : undefined;
 
-        const res = (await api.post<PlayerEvaluationResponse>(`/evaluation/players`, {leagueData: {test: "test"}}, {
+        const res = (await api.post<PlayerEvaluationResponse>(`/evaluation/players`, {leagueData}, {
             params: cleanParams({
                 playerIds: filters.playerIds?.length ? filters.playerIds.join(",") : undefined,
                 positions: queryPositions?.length ? queryPositions.join(",") : undefined,
@@ -81,9 +81,9 @@ export async function getEvaluatedPlayers(filters: PlayerEvaluationQueryParams =
     }
 }
 
-export async function getEvaluatedDrafts(draftIds: DraftID[]): Promise<DraftEvaluationResponse> {
+export async function getEvaluatedDrafts(draftIds: DraftID[], leagueData?: LeagueData): Promise<DraftEvaluationResponse> {
     try {
-        const res = (await api.get<DraftEvaluationResponse>(`/evaluation/drafts`, {
+        const res = (await api.post<DraftEvaluationResponse>(`/evaluation/drafts`, {leagueData}, {
                 params: { draftIds: draftIds.join(",") },
         })).data;
 

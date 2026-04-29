@@ -81,80 +81,93 @@ router.post('/players', async (req: Request, res: Response) => {
 	}
 });
 
-router.get('/drafts', async (req: Request, res: Response) => {
-	try {
-		const requestedDraftIds = parseCsvQuery(req.query.draftIds);
-		const selectedDrafts = requestedDraftIds.length
-			? testDraftDataSet.filter((draft) => requestedDraftIds.includes(draft.id))
-			: testDraftDataSet;
+router.post('/drafts', async (req: Request, res: Response) => {
+  try {
+    const leagueData: LeagueData | undefined = req.body.leagueData;
+    const requestedDraftIds = parseCsvQuery(req.query.draftIds);
 
-		const playerIds: PlayerID[] = Array.from(
-			new Set(
-				selectedDrafts.flatMap((draft) =>
-					Object.values(draft.roster).filter(
-						(id): id is PlayerID => Boolean(id)
-					)
-				)
-			)
-		);
+    let leagueSettings: LeagueSettings | undefined = undefined;
+    let leagueState: LeagueState | undefined = undefined;
 
-		let evaluationsByPlayerId: Record<PlayerID, PlayerEvaluation> = {};
+    if (leagueData) {
+      leagueSettings = convertLeagueDataToLeagueSettings(leagueData);
+      leagueState = convertLeagueDataToLeagueState(leagueData);
+    }
 
-		if (playerIds.length) {
-			const players = await getPlayerEvaluations({});
+    const selectedDrafts = requestedDraftIds.length
+      ? testDraftDataSet.filter((draft) => requestedDraftIds.includes(draft.id))
+      : testDraftDataSet;
 
-			const filteredPlayers = players.filter((p) =>
-				playerIds.includes(p.id)
-			);
+    const playerIds: PlayerID[] = Array.from(
+      new Set(
+        selectedDrafts.flatMap((draft) =>
+          Object.values(draft.roster).filter(
+            (id): id is PlayerID => Boolean(id)
+          )
+        )
+      )
+    );
 
-			evaluationsByPlayerId = Object.fromEntries(
-				filteredPlayers.map((player) => [player.id, player])
-			);
-		}
+    let evaluationsByPlayerId: Record<PlayerID, PlayerEvaluation> = {};
 
-		const slotsOrder: Position[] = [
-			'C', '1B', '2B', '3B', 'SS', 'CI', 'MI',
-			'OF1', 'OF2', 'OF3', 'OF4', 'OF5',
-			'UTIL',
-			'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'
-		];
+    if (playerIds.length) {
+      const allPlayers = await getPlayerEvaluations({
+        leagueSettings: leagueSettings ?? defaultLeagueSettings,
+        leagueState: leagueState ?? defaultLeagueState
+      });
 
-		const evaluatedDrafts: DraftEvaluation[] = selectedDrafts.map((draft: DraftData) => {
-			const slots = slotsOrder.map((position) => {
-				const playerId = draft.roster[position];
-				const player = playerId
-					? evaluationsByPlayerId[playerId] ?? null
-					: null;
+      const filteredPlayers = allPlayers.filter((p) =>
+        playerIds.includes(p.id)
+      );
 
-				return { position, player };
-			});
+      evaluationsByPlayerId = Object.fromEntries(
+        filteredPlayers.map((player) => [player.id, player])
+      );
+    }
 
-			const totals = slots.reduce(
-				(acc, slot) => {
-					if (!slot.player) return acc;
+    const slotsOrder: Position[] = [
+      'C', '1B', '2B', '3B', 'SS', 'CI', 'MI',
+      'OF1', 'OF2', 'OF3', 'OF4', 'OF5',
+      'UTIL',
+      'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'
+    ];
 
-					return {
-						value: acc.value + slot.player.evaluation.auctionPrice,
-						score: acc.score + slot.player.evaluation.normalizedValue
-					};
-				},
-				{ value: 0, score: 0 }
-			);
+    const evaluatedDrafts: DraftEvaluation[] = selectedDrafts.map((draft: DraftData) => {
+      const slots = slotsOrder.map((position) => {
+        const playerId = draft.roster[position];
+        const player = playerId
+          ? evaluationsByPlayerId[playerId] ?? null
+          : null;
 
-			return {
-				id: draft.id,
-				slots,
-				totals
-			};
-		});
+        return { position, player };
+      });
 
-		return res.json({
-			drafts: evaluatedDrafts
-		});
-	} catch (error) {
-		console.error('Evaluation drafts API error:', error);
-		return res.status(502).json({ error: 'Failed to fetch draft evaluations' });
-	}
+      const totals = slots.reduce(
+        (acc, slot) => {
+          if (!slot.player) return acc;
+
+          return {
+            value: acc.value + slot.player.evaluation.auctionPrice,
+            score: acc.score + slot.player.evaluation.normalizedValue
+          };
+        },
+        { value: 0, score: 0 }
+      );
+
+      return {
+        id: draft.id,
+        slots,
+        totals
+      };
+    });
+
+    return res.json({
+      drafts: evaluatedDrafts
+    });
+  } catch (error) {
+    console.error('Evaluation drafts API error:', error);
+    return res.status(502).json({ error: 'Failed to fetch draft evaluations' });
+  }
 });
 
 export default router;

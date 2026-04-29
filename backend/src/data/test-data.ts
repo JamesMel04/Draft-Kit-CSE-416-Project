@@ -1,167 +1,99 @@
+import fs from 'fs';
+import path from 'path';
 import { PlayerData, DraftData, LeagueData } from '../types';
+import { getPlayers } from '../utils/api';
 
-// Draft rosters are typed as full slot maps; empty string means slot not filled yet.
-const emptyRoster: DraftData["roster"] = {
-  "C": undefined,
-  "1B": undefined,
-  "2B": undefined,
-  "3B": undefined,
-  "SS": undefined,
-  "CI": undefined,
-  "MI": undefined,
-  "OF1": undefined,
-  "OF2": undefined,
-  "OF3": undefined,
-  "OF4": undefined,
-  "OF5": undefined,
-  "UTIL": undefined,
-  "P1": undefined,
-  "P2": undefined,
-  "P3": undefined,
-  "P4": undefined,
-  "P5": undefined,
-  "P6": undefined,
-  "P7": undefined,
-  "P8": undefined,
-  "P9": undefined,
+// Path where fetched player JSON will be written for later inspection.
+const playersJsonPath = path.join(__dirname, 'players.json');
+
+// Draft rosters are typed as full slot maps; empty value means slot not filled yet.
+const emptyRoster: DraftData['roster'] = {
+  C: undefined,
+  '1B': undefined,
+  '2B': undefined,
+  '3B': undefined,
+  SS: undefined,
+  CI: undefined,
+  MI: undefined,
+  OF1: undefined,
+  OF2: undefined,
+  OF3: undefined,
+  OF4: undefined,
+  OF5: undefined,
+  UTIL: undefined,
+  P1: undefined,
+  P2: undefined,
+  P3: undefined,
+  P4: undefined,
+  P5: undefined,
+  P6: undefined,
+  P7: undefined,
+  P8: undefined,
+  P9: undefined,
 };
 
-export const testPlayerDataSet: PlayerData[] = [
-  {
-    id: 1,
-    name: "PlayerName 1",
-    team: "PlayerTeam 1",
-    positions: ["OF1"],
-    suggestedValue: 32,
-    stats: {
-      projection: {
-        seasons: [2026],
-        hitter: {"Homeruns": 1}
-      },
-      lastYear: {
-        seasons: [2025],
-        hitter: {"Homeruns": 1}
-      },
-      threeYearAvg: {
-        seasons: [2023, 2024, 2025],
-        hitter: {"Homeruns": 3}
-      }
-    }
-  },
-  {
-    id: 2,
-    name: "PlayerName 2",
-    team: "PlayerTeam 2",
-    positions: ["OF1"],
-    suggestedValue: 32,
-    stats: {
-      projection: {
-        seasons: [2026],
-        hitter: {"Homeruns": 2}
-      },
-      lastYear: {
-        seasons: [2025],
-        hitter: {"Homeruns": 2}
-      },
-      threeYearAvg: {
-        seasons: [2023, 2024, 2025],
-        hitter: {"Homeruns": 6}
-      }
-    }
-  },
-  {
-    id: 3,
-    name: "PlayerName 3",
-    team: "PlayerTeam 3",
-    positions: ["OF1"],
-    suggestedValue: 32,
-    stats: {
-      projection: {
-        seasons: [2026],
-        hitter: {"Homeruns": 3}
-      },
-      lastYear: {
-        seasons: [2025],
-        hitter: {"Homeruns": 3}
-      },
-      threeYearAvg: {
-        seasons: [2023, 2024, 2025],
-        hitter: {"Homeruns": 9}
-      }
-    }
-  },
-  {
-    id: 4,
-    name: "PlayerName 4",
-    team: "PlayerTeam 4",
-    positions: ["OF1"],
-    suggestedValue: 32,
-    stats: {
-      projection: {
-        seasons: [2026],
-        hitter: {"Homeruns": 4}
-      },
-      lastYear: {
-        seasons: [2025],
-        hitter: {"Homeruns": 4}
-      },
-      threeYearAvg: {
-        seasons: [2023, 2024, 2025],
-        hitter: {"Homeruns": 12}
-      }
-    }
-  }
-];
+// Exports populated by `initTestData()` below. There is no local mock fallback;
+// if fetching fails, initialization will throw so the server can decide how to proceed.
+export const testPlayerDataSet: PlayerData[] = [];
+export const testDraftDataSet: DraftData[] = [];
+export const testLeagueDataSet: LeagueData[] = [];
 
-export const testDraftDataSet: DraftData[] = [
-  {
-    userId: 'anonymous-user',
-    id: "draft1",
-    teamName: "Team1",
-    roster: {
-      ...emptyRoster,
-      "C": testPlayerDataSet[0].id,
-      "1B": testPlayerDataSet[1].id
-    }
-  },
-  {
-    userId: 'anonymous-user',
-    id: "draft2",
-    teamName: "Team2",
-    roster: {
-      ...emptyRoster,
-      "C": testPlayerDataSet[2].id,
-      "1B": testPlayerDataSet[3].id
-    }
-  }
-];
+export let testPlayer: PlayerData | undefined;
+export let testDraft: DraftData | undefined;
+export let testLeague: LeagueData | undefined;
 
-export const testLeagueDataSet: LeagueData[] = [
-  {
-    id: "league1",
-    name: "Example League",
-    startingBudget: 300,
-    teams: {
-      "Team1": {
-        roster: {
-          ...emptyRoster,
-          "C": testPlayerDataSet[0].id,
-          "1B": testPlayerDataSet[1].id
+export async function initTestData(): Promise<void> {
+  try {
+    const { hitters, pitchers } = await getPlayers();
+    const combined: PlayerData[] = [...hitters, ...pitchers];
+
+    // Write fetched players to players.json for debugging/inspection.
+    try {
+      fs.writeFileSync(playersJsonPath, JSON.stringify(combined, null, 2), 'utf8');
+    } catch (writeErr) {
+      console.error('Failed to write players.json:', writeErr);
+    }
+
+    // Populate exported arrays in-place so other modules holding references see updates.
+    testPlayerDataSet.length = 0;
+    testPlayerDataSet.push(...combined);
+
+    // Build minimal drafts/leagues from available players (may be empty arrays if not enough players).
+    testDraftDataSet.length = 0;
+    testLeagueDataSet.length = 0;
+
+    if (testPlayerDataSet.length >= 4) {
+      testDraftDataSet.push(
+        {
+          userId: 'anonymous-user',
+          id: 'draft1',
+          teamName: 'Team1',
+          roster: { ...emptyRoster, C: testPlayerDataSet[0].id, '1B': testPlayerDataSet[1].id },
+        },
+        {
+          userId: 'anonymous-user',
+          id: 'draft2',
+          teamName: 'Team2',
+          roster: { ...emptyRoster, C: testPlayerDataSet[2].id, '1B': testPlayerDataSet[3].id },
         }
-      },
-      "Team2": {
-        roster: {
-          ...emptyRoster,
-          "C": testPlayerDataSet[2].id,
-          "1B": testPlayerDataSet[3].id
-        }
-      }
+      );
+
+      testLeagueDataSet.push({
+        id: 'league1',
+        name: 'Example League',
+        startingBudget: 300,
+        teams: {
+          Team1: { roster: { ...emptyRoster, C: testPlayerDataSet[0].id, '1B': testPlayerDataSet[1].id } },
+          Team2: { roster: { ...emptyRoster, C: testPlayerDataSet[2].id, '1B': testPlayerDataSet[3].id } },
+        },
+      });
+
+      testPlayer = testPlayerDataSet[0];
+      testDraft = testDraftDataSet[0];
+      testLeague = testLeagueDataSet[0];
     }
+  } catch (err) {
+    console.error('initTestData failed:', err);
+    throw err;
   }
-];
-
-export const testPlayer: PlayerData = testPlayerDataSet[0];
-
-export const testDraft: DraftData = testDraftDataSet[0];
-
-export const testLeague: LeagueData = testLeagueDataSet[0];
+}
