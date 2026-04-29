@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useUser } from '@auth0/nextjs-auth0/client';
-import { DraftEvaluation, PlayerEvaluation, EvaluationMeta, DraftData} from '@/_lib/types';
+import { DraftEvaluation, PlayerEvaluation, DraftData } from '@/_lib/types';
 import { allSearchFilterPositions } from '@/_lib/consts';
 import { getEvaluatedDrafts, getSavedDrafts } from '@/_lib/api';
 import PlayerEvaluationPanel from '@/components/players/player_evaluation_panel';
@@ -16,8 +16,9 @@ export default function Evaluation() {
 
     const [playerResults, setPlayerResults] = useState<PlayerEvaluation[]>([]);
     const [draftResults, setDraftResults] = useState<DraftEvaluation[]>([]);
-
-    const [draftMeta, setDraftMeta] = useState<EvaluationMeta | null>(null);
+    
+    // Track which draft the user is currently inspecting
+    const [inspectedDraftId, setInspectedDraftId] = useState<string | null>(null);
 
     const [draftLoading, setDraftLoading] = useState(false);
     const [draftError, setDraftError] = useState<string | null>(null);
@@ -36,6 +37,7 @@ export default function Evaluation() {
             }
         };
 
+        // if (user?.sub) loadSavedDrafts();
         loadSavedDrafts();
     }, [user?.sub]);
 
@@ -44,21 +46,19 @@ export default function Evaluation() {
         if (!ids.length) {
             setDraftError("Select at least one saved draft.");
             setDraftResults([]);
-            setDraftMeta(null);
             return;
         }
 
         try {
             setDraftLoading(true);
             setDraftError(null);
-
             const res = await getEvaluatedDrafts(ids);
             setDraftResults(res.drafts);
-            setDraftMeta(res.meta);
+            // Auto-select the first one to show details immediately
+            if (res.drafts.length > 0) setInspectedDraftId(res.drafts[0].id);
         } catch {
             setDraftError("Failed to evaluate drafts.");
             setDraftResults([]);
-            setDraftMeta(null);
         } finally {
             setDraftLoading(false);
         }
@@ -70,14 +70,14 @@ export default function Evaluation() {
         );
     };
 
-    const bestDraft = useMemo(() => {
-        if (!draftResults.length) return null;
-        return [...draftResults].sort((a, b) => b.totals.value - a.totals.value)[0];
-    }, [draftResults]);
+    // Helper to find the details of the currently "clicked" draft
+    const activeDraftDetails = useMemo(() => {
+        return draftResults.find(d => d.id === inspectedDraftId);
+    }, [draftResults, inspectedDraftId]);
 
     const bestPlayer = useMemo(() => {
         if (!playerResults.length) return null;
-        return [...playerResults].sort((a, b) => b.evaluation.score - a.evaluation.score)[0];
+        return [...playerResults].sort((a, b) => b.evaluation.normalizedValue - a.evaluation.normalizedValue)[0];
     }, [playerResults]);
 
     const playerColumns = [
@@ -98,31 +98,25 @@ export default function Evaluation() {
         },
         {
             header: "Value",
-            sortField: "suggestedValue",
-            renderCell: (player: PlayerEvaluation) => `$${player.suggestedValue}`,
+            sortField: "evaluation.auctionPrice",
+            renderCell: (player: PlayerEvaluation) => `$${player.evaluation.auctionPrice.toFixed(2)}`,
         },
         {
-            header: "Eval Score",
-            sortField: "evaluation.score",
-            renderCell: (player: PlayerEvaluation) => player.evaluation.score,
-        },
-        {
-            header: "Tier",
-            sortField: "evaluation.tier",
-            renderCell: (player: PlayerEvaluation) => player.evaluation.tier,
-        },
+            header: "Eval",
+            sortField: "evaluation.normalizedValue",
+            renderCell: (player: PlayerEvaluation) => player.evaluation.normalizedValue,
+        }
     ];
 
     return (
         <div className="space-y-5 text-slate-900">
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <h1 className="text-3xl font-bold tracking-tight">Evaluation Center</h1>
-                <p className="mt-1 text-sm text-slate-600">
-                    Evaluate players and drafts on demand.
-                </p>
+                <p className="mt-1 text-sm text-slate-600">Evaluate players and drafts on demand.</p>
             </div>
 
             <div className="grid gap-4 xl:grid-cols-2">
+                {/* Left Panel: Keeping your integral PlayerEvaluationPanel exactly the same */}
                 <div className="space-y-3">
                     <PlayerEvaluationPanel
                         title="Player Evaluation"
@@ -135,102 +129,84 @@ export default function Evaluation() {
 
                     {bestPlayer && (
                         <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
-                            Best result: <span className="font-semibold">{bestPlayer.name}</span> | Score {bestPlayer.evaluation.score}
+                            Best result: <span className="font-semibold">{bestPlayer.name}</span> | Score {bestPlayer.evaluation.normalizedValue}
                         </div>
                     )}
                 </div>
 
+                {/* Right Panel: Draft Evaluation with "Click to View" functionality */}
                 <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                     <h2 className="text-xl font-bold">Draft Evaluation</h2>
-                    <p className="text-xs text-slate-500">Choose saved drafts to evaluate.</p>
-
+                    
                     <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-                        <div className="text-xs font-semibold uppercase text-slate-600">Saved drafts (from backend)</div>
-
+                        <div className="text-xs font-semibold uppercase text-slate-600">Saved drafts</div>
                         {savedDraftsLoading ? (
-                            <p className="mt-2 text-xs text-slate-500">Loading saved drafts...</p>
-                        ) : savedDraftsError ? (
-                            <p className="mt-2 text-xs font-semibold text-rose-700">{savedDraftsError}</p>
-                        ) : savedDrafts.length === 0 ? (
-                            <p className="mt-2 text-xs text-slate-500">No saved drafts found.</p>
+                            <p className="mt-2 text-xs">Loading...</p>
                         ) : (
-                            <div className="mt-2 space-y-2">
-                                {savedDrafts.map((draft) => {
-                                    const selected = selectedDraftIds.includes(draft.id);
-                                    return (
-                                        <label
-                                            key={draft.id}
-                                            className="flex cursor-pointer items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2"
-                                        >
-                                            <div>
-                                                <div className="text-sm font-semibold text-slate-900">{draft.teamName}</div>
-                                                <div className="text-xs text-slate-500"> {draft.id}</div>
-                                            </div>
-                                            <input
-                                                type="checkbox"
-                                                checked={selected}
-                                                onChange={() => toggleDraftSelection(draft.id)}
-                                            />
-                                        </label>
-                                    );
-                                })}
+                            <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                                {savedDrafts.map((draft) => (
+                                    <label key={draft.id} className="flex cursor-pointer items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 hover:border-slate-400">
+                                        <div className="text-sm font-semibold">{draft.teamName}</div>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedDraftIds.includes(draft.id)}
+                                            onChange={() => toggleDraftSelection(draft.id)}
+                                        />
+                                    </label>
+                                ))}
                             </div>
                         )}
                     </div>
 
                     <button
-                        type="button"
                         onClick={runDraftEvaluation}
-                        className="rounded-md bg-slate-800 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-900"
+                        className="w-full rounded-md bg-slate-800 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-900 disabled:opacity-50"
+                        disabled={draftLoading || selectedDraftIds.length === 0}
                     >
-                        {draftLoading ? "Evaluating..." : "Evaluate Drafts"}
+                        {draftLoading ? "Evaluating..." : "Evaluate Selected Drafts"}
                     </button>
 
-                    {draftMeta && (
-                        <div className="rounded-md bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
-                            Source: {draftMeta.source}
-                            {draftMeta.provider ? ` | Provider: ${draftMeta.provider}` : ""}
-                        </div>
-                    )}
-
-                    {draftError && (
-                        <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
-                            {draftError}
-                        </div>
-                    )}
-
-                    {bestDraft && (
-                        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
-                            Best draft: <span className="font-semibold">{bestDraft.id}</span> | Value {bestDraft.totals.value}
-                        </div>
-                    )}
-
+                    {/* Results List */}
                     <div className="overflow-x-auto rounded-lg border border-slate-200">
-                        <table className="min-w-full border-collapse text-sm">
-                            <thead className="bg-slate-100 text-slate-800">
+                        <table className="min-w-full text-sm">
+                            <thead className="bg-slate-100">
                                 <tr>
-                                    <th className="px-3 py-2 text-left font-bold">Draft ID</th>
-                                    <th className="px-3 py-2 text-left font-bold">Evaluated Value</th>
+                                    <th className="px-3 py-2 text-left font-bold">Team ID</th>
+                                    <th className="px-3 py-2 text-right font-bold">Value</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {!draftResults.length ? (
-                                    <tr>
-                                        <td className="px-3 py-3 text-slate-500" colSpan={2}>
-                                            No draft evaluations yet.
-                                        </td>
+                                {draftResults.map((draft) => (
+                                    <tr 
+                                        key={draft.id} 
+                                        onClick={() => setInspectedDraftId(draft.id)}
+                                        className={`border-t cursor-pointer transition-colors ${inspectedDraftId === draft.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-slate-50'}`}
+                                    >
+                                        <td className="px-3 py-2 font-medium">{draft.id}</td>
+                                        <td className="px-3 py-2 text-right font-bold">${draft.totals.value.toFixed(2)}</td>
                                     </tr>
-                                ) : (
-                                    draftResults.map((draft) => (
-                                        <tr key={draft.id} className="border-t border-slate-200">
-                                            <td className="px-3 py-2 font-semibold">{draft.id}</td>
-                                            <td className="px-3 py-2">{draft.totals.value}</td>
-                                        </tr>
-                                    ))
-                                )}
+                                ))}
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Inspection Area: Shows the actual team when a row is clicked */}
+                    {activeDraftDetails && (
+                        <div className="mt-4 p-4 rounded-lg border-2 border-blue-100 bg-blue-50/30">
+                            <h3 className="text-sm font-bold uppercase text-blue-800 mb-3">Roster Breakdown: {activeDraftDetails.id}</h3>
+                            <div className="grid grid-cols-1 gap-1">
+                                {activeDraftDetails.slots.map((slot, index) => (
+                                    <div key={index} className="flex justify-between items-center bg-white p-2 rounded border border-blue-100 text-xs">
+                                        <span className="w-12 font-bold text-slate-400">{slot.position}</span>
+                                        <span className="flex-1 font-medium">{slot.player?.name || <span className="text-slate-300 italic">Empty</span>}</span>
+                                        <span className="font-mono text-blue-700 font-bold">
+                                            {slot.player ? `$${slot.player.evaluation.auctionPrice.toFixed(1)}` : '--'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

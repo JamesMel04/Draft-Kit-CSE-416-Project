@@ -1,10 +1,11 @@
 import { getPlayer } from '@/_lib/api';
+import { PlayerID } from '@/_lib/types';
 import PlayerCard from '@/components/players/player_card';
 
 export default async function PlayerView({
     params
 } : {
-    params : { id : string }
+    params : { id : PlayerID }
 }) {
     const {id} = (await params);
     console.log(`ID is ${id}`);

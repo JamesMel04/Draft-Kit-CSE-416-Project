@@ -1,7 +1,8 @@
 /* This file should generally match the types file for the server */
-export type PlayerID = string;
+export type PlayerID = number;
 export type DraftID = string;
 export type LeagueID = string;
+export type TeamName = string; // User made team name
 
 export type Position =
   | "C"
@@ -40,6 +41,7 @@ export type PlayerData = {
   team: string;
   positions: Position[];
   suggestedValue: number;
+  priceSold?: number;
   stats: {
     projection: PlayerStats,
     lastYear: PlayerStats,
@@ -52,12 +54,9 @@ export type PlayerEvaluation = {
 	name: string;
 	team: string;
 	positions: Position[];
-	suggestedValue: number;
 	evaluation: {
-		score: number;
-		tier: string;
-		confidence: number;
-		summary: string;
+    normalizedValue: number;
+    auctionPrice: number;
 	};
 };
 
@@ -66,11 +65,15 @@ export type DraftSlotEvaluation = {
   player: PlayerEvaluation | null;
 };
 
+export type RosterData = {
+  roster: Partial<Record<Position, PlayerID | undefined>>;
+};
+
 export type DraftData = {
   userId: string;
   id: DraftID;
   teamName: string;
-  roster: Record<Position, PlayerID>;
+  roster: Partial<Record<Position, PlayerID | undefined>>;
 };
 
 export type DraftEvaluation = {
@@ -82,23 +85,17 @@ export type DraftEvaluation = {
   };
 };
 
-export type EvaluationMeta = {
-  source: 'backend';
-  provider: string;
-  generatedAt: string;
-  notes: string;
-};
-
 export type LeagueData = {
   id: LeagueID;
   name: string;
   startingBudget: number;
-  teams: Record<string, Partial<Record<Position, string | null>>>;
+  teams: Record<TeamName, RosterData>;
 };
 
 export type SortField = string;
 export type SortAsc = boolean;
 
+// ===================== BACKEND REQUEST TYPES ==============================
 export type QueryParams = Record<string, string | number | boolean | undefined>;
 
 export type CleanQueryParams = Record<string, string | number | boolean>;
@@ -107,33 +104,31 @@ export type PlayerQueryParams = {
   name?: string; // Name of player to filter by (partial match)
 };
 
-export type PlayerGetResponse = {
-  players: PlayerData[];
-  fallback?: boolean;
-};
-
 export type PlayerEvaluationQueryParams = {
   name?: string;
   playerIds?: PlayerID[];
-  positions?: Position[];
+  positions?: SearchFilterPosition[];
   minPrice?: number;
   maxPrice?: number;
   alreadyTakenIds?: PlayerID[];
 };
 
+// ===================== BACKEND RESPONSE TYPES =============================
+export type PlayerGetResponse = {
+  players: PlayerData[];
+  fallback?: boolean;
+};
+
 export type PlayerEvaluationResponse = {
   players: PlayerEvaluation[];
-  meta: EvaluationMeta;
 };
 
 export type DraftGetResponse = {
   drafts: DraftData[];
-  meta: EvaluationMeta;
 };
 
 export type DraftEvaluationResponse = {
   drafts: DraftEvaluation[];
-  meta: EvaluationMeta;
 };
 
 export type SavedDraftsResponse = {

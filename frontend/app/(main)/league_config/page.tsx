@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { getPlayers } from "@/_lib/api";
 import { allPositions } from "@/_lib/consts";
-import { LeagueData, PlayerData, Position } from "@/_lib/types";
+import { LeagueData, PlayerData, PlayerID, Position } from "@/_lib/types";
 
 type TeamState = {
   name: string;
@@ -58,7 +58,7 @@ export default function LeagueConfigPage() {
   // DERIVED STATE
   // -------------------------
   const assignedPlayerIds = useMemo(() => {
-    const ids = new Set<string>();
+    const ids = new Set<PlayerID>();
     teams.forEach((t) =>
       Object.values(t.roster).forEach((p) => { if (p) ids.add(p.id); })
     );
@@ -113,12 +113,12 @@ export default function LeagueConfigPage() {
     setLocalTeamNames((prev) => { const n = { ...prev }; delete n[idx]; return n; });
   };
 
-  const handleAssignTeam = useCallback((playerId: string, newIdx: number) => {
+  const handleAssignTeam = useCallback((playerId: PlayerID, newIdx: number) => {
     setAssignTeamByPlayer((prev) => ({ ...prev, [playerId]: newIdx }));
     setAssignPosByPlayer((prev) => { const n = { ...prev }; delete n[playerId]; return n; });
   }, []);
 
-  const handleAssignPos = useCallback((playerId: string, pos: Position) => {
+  const handleAssignPos = useCallback((playerId: PlayerID, pos: Position) => {
     setAssignPosByPlayer((prev) => ({ ...prev, [playerId]: pos }));
   }, []);
 
@@ -154,9 +154,9 @@ export default function LeagueConfigPage() {
       teams: Object.fromEntries(
         teams.map((t) => [
           t.name,
-          Object.fromEntries(
-            allPositions.map((pos) => [pos, t.roster[pos]?.id ?? ""])
-          ) as Record<Position, string>,
+          {
+            roster: Object.fromEntries(allPositions.map((pos) => [pos, t.roster[pos]?.id]))
+          }
         ])
       ),
     };
