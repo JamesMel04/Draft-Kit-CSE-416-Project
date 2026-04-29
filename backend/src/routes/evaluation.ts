@@ -9,16 +9,16 @@ import {
 	LeagueData,
 	LeagueState,
 	LeagueSettings
-} from '@/types';
-import { getPlayerEvaluations } from '@/utils/api';
+} from '../types';
+import { getPlayerEvaluations } from '../utils/api';
 import {
 	parseCsvQuery,
 	parseOptionalNumberQuery,
 	parseStringQuery
-} from '@/utils/parsers';
-import { testDraftDataSet } from '@/data/test-data';
-import { convertLeagueDataToLeagueSettings, convertLeagueDataToLeagueState } from '@/utils/api-type-converter';
-import { defaultLeagueSettings, defaultLeagueState } from '@/consts';
+} from '../utils/parsers';
+import { testDraftDataSet } from '../data/test-data';
+import { convertLeagueDataToLeagueSettings, convertLeagueDataToLeagueState } from '../utils/api-type-converter';
+import { defaultLeagueSettings, defaultLeagueState } from '../consts';
 
 const router = Router();
 

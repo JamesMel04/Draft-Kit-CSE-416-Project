@@ -1,5 +1,5 @@
-import { LeagueData, LeagueSettings, LeagueState, Player, PlayerData, PlayerEvaluation, PlayerPools, PlayerStats, PlayerValuation, SeasonStats } from '@/types';
-import { defaultRosterSlotsCounts } from '@/consts';
+import { LeagueData, LeagueSettings, LeagueState, Player, PlayerData, PlayerEvaluation, PlayerPools, PlayerStats, PlayerValuation, SeasonStats } from '../types';
+import { defaultRosterSlotsCounts } from '../consts';
 
 export function convertSeasonStatsToPlayerStats(seasonStats: SeasonStats): PlayerStats {
 	if (seasonStats.hitting) {

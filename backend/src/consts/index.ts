@@ -1,5 +1,5 @@
-import { requiredEnv } from "@/utils/env-reader";
-import { LeagueSettings, LeagueState} from "@/types";
+import { requiredEnv } from "../utils/env-reader";
+import { LeagueSettings, LeagueState} from "../types";
 
 export const MLB_API_KEY = requiredEnv('MLB_API_KEY');
 
