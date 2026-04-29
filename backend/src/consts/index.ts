@@ -55,7 +55,7 @@ export const defaultRosterSlotsCounts = {
 };
 
 export const defaultLeagueSettings: LeagueSettings = {
-    budget: 100,
+    budget: 500,
     teamCount: 1,
     rosterSlots: defaultRosterSlotsCounts
 };

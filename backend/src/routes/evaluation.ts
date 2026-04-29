@@ -1,7 +1,6 @@
 import { Router, Request, Response } from 'express';
 import {
 	PlayerEvaluation,
-	EvaluationMeta,
 	DraftEvaluation,
 	Position,
 	DraftData,
@@ -17,19 +16,10 @@ import {
 	parseStringQuery
 } from '../utils/parsers';
 import { testDraftDataSet } from '../data/test-data';
-import { convertLeagueDataToLeagueSettings, convertLeagueDataToLeagueState } from '../utils/api-type-converter';
+import { convertLeagueDataToLeagueSettings, convertLeagueDataToLeagueState, positionToFilterPosition } from '../utils/api-type-converter';
 import { defaultLeagueSettings, defaultLeagueState } from '../consts';
 
 const router = Router();
-
-function getEvaluationMeta(provider: string, notes: string): EvaluationMeta {
-	return {
-		source: 'backend',
-		provider,
-		generatedAt: new Date().toISOString(),
-		notes
-	};
-}
 
 router.post('/players', async (req: Request, res: Response) => {
 	try {
@@ -65,15 +55,15 @@ router.post('/players', async (req: Request, res: Response) => {
 				return false;
 			}
 			if (positionSet.size) {
-				const hasRequestedPosition = player.positions.some((position) => positionSet.has(position));
+				const hasRequestedPosition = player.positions.some((position) => positionSet.has(positionToFilterPosition(position)));
 				if (!hasRequestedPosition) {
 					return false;
 				}
 			}
-			if (minPrice !== undefined && player.suggestedValue < minPrice) {
+			if (minPrice !== undefined && player.evaluation.auctionPrice < minPrice) {
 				return false;
 			}
-			if (maxPrice !== undefined && player.suggestedValue > maxPrice) {
+			if (maxPrice !== undefined && player.evaluation.auctionPrice > maxPrice) {
 				return false;
 			}
 			if (nameFilter && !player.name.toLowerCase().includes(nameFilter.toLowerCase())) {
@@ -83,8 +73,7 @@ router.post('/players', async (req: Request, res: Response) => {
 		});
 
 		return res.json({
-			players: filteredEvaluatedPlayers,
-			meta: getEvaluationMeta('external-evaluator', 'Player evaluations sourced from API.')
+			players: filteredEvaluatedPlayers
 		});
 	} catch (error) {
 		console.error('Evaluation players API error:', error);
@@ -160,11 +149,7 @@ router.get('/drafts', async (req: Request, res: Response) => {
 		});
 
 		return res.json({
-			drafts: evaluatedDrafts,
-			meta: getEvaluationMeta(
-				'external-evaluator',
-				'Draft evaluations computed from draft rosters and API player evaluations.'
-			)
+			drafts: evaluatedDrafts
 		});
 	} catch (error) {
 		console.error('Evaluation drafts API error:', error);

@@ -74,15 +74,7 @@ export async function getEvaluatedPlayers(filters: PlayerEvaluationQueryParams =
             }),
         })).data;
 
-        return {
-            ...res,
-            meta: {
-                source: res.meta?.source ?? "backend",
-                provider: res.meta?.provider ?? "external-evaluator",
-                generatedAt: res.meta?.generatedAt,
-                notes: res.meta?.notes,
-            },
-        };
+        return {...res};
     } catch (err) {
         console.error("Player evaluation query failed: ", err);
         throw err;
@@ -95,15 +87,7 @@ export async function getEvaluatedDrafts(draftIds: DraftID[]): Promise<DraftEval
                 params: { draftIds: draftIds.join(",") },
         })).data;
 
-        return {
-            ...res,
-            meta: {
-                source: res.meta?.source ?? "backend",
-                provider: res.meta?.provider ?? "external-evaluator",
-                generatedAt: res.meta?.generatedAt,
-                notes: res.meta?.notes,
-            },
-        };
+        return {...res};
     } catch (err) {
         console.error("Draft evaluation query failed: ", err);
         throw err;

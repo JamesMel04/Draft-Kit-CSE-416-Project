@@ -1,4 +1,4 @@
-import { LeagueData, LeagueSettings, LeagueState, Player, PlayerData, PlayerEvaluation, PlayerPools, PlayerStats, PlayerValuation, SeasonStats } from '../types';
+import { LeagueData, LeagueSettings, LeagueState, Player, PlayerData, PlayerEvaluation, PlayerPools, PlayerStats, PlayerValuation, Position, SearchFilterPosition, SeasonStats } from '../types';
 import { defaultRosterSlotsCounts } from '../consts';
 
 export function convertSeasonStatsToPlayerStats(seasonStats: SeasonStats): PlayerStats {
@@ -74,10 +74,23 @@ export function convertPlayerValuationToEvaluation(player: PlayerData, valuation
 		name: player.name,
 		team: player.team,
 		positions: player.positions,
-		suggestedValue: player.suggestedValue,
 		evaluation: {
         normalizedValue: valuation.normalizedValue,
         auctionPrice: valuation.auctionPrice
     }
 	};
+}
+
+export function positionToFilterPosition(pos: Position): SearchFilterPosition {
+    if (["C"].includes(pos)) return "C";
+    if (["1B"].includes(pos)) return "1B";
+    if (["2B"].includes(pos)) return "2B";
+    if (["3B"].includes(pos)) return "3B";
+    if (["SS"].includes(pos)) return "SS";
+    if (["CI"].includes(pos)) return "OF";
+    if (["MI"].includes(pos)) return "OF";
+    if (["OF1", "OF2", "OF3", "OF4", "OF5"].includes(pos)) return "OF";
+    if (["UTIL"].includes(pos)) return "UTIL";
+    if (["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"].includes(pos)) return "P";
+    return pos as SearchFilterPosition;
 }

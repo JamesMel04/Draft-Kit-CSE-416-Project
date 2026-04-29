@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useUser } from '@auth0/nextjs-auth0/client';
-import { DraftEvaluation, PlayerEvaluation, EvaluationMeta, DraftData} from '@/_lib/types';
+import { DraftEvaluation, PlayerEvaluation, DraftData} from '@/_lib/types';
 import { allSearchFilterPositions } from '@/_lib/consts';
 import { getEvaluatedDrafts, getSavedDrafts } from '@/_lib/api';
 import PlayerEvaluationPanel from '@/components/players/player_evaluation_panel';
@@ -16,8 +16,6 @@ export default function Evaluation() {
 
     const [playerResults, setPlayerResults] = useState<PlayerEvaluation[]>([]);
     const [draftResults, setDraftResults] = useState<DraftEvaluation[]>([]);
-
-    const [draftMeta, setDraftMeta] = useState<EvaluationMeta | null>(null);
 
     const [draftLoading, setDraftLoading] = useState(false);
     const [draftError, setDraftError] = useState<string | null>(null);
@@ -44,7 +42,6 @@ export default function Evaluation() {
         if (!ids.length) {
             setDraftError("Select at least one saved draft.");
             setDraftResults([]);
-            setDraftMeta(null);
             return;
         }
 
@@ -54,11 +51,9 @@ export default function Evaluation() {
 
             const res = await getEvaluatedDrafts(ids);
             setDraftResults(res.drafts);
-            setDraftMeta(res.meta);
         } catch {
             setDraftError("Failed to evaluate drafts.");
             setDraftResults([]);
-            setDraftMeta(null);
         } finally {
             setDraftLoading(false);
         }
@@ -77,7 +72,7 @@ export default function Evaluation() {
 
     const bestPlayer = useMemo(() => {
         if (!playerResults.length) return null;
-        return [...playerResults].sort((a, b) => b.evaluation.score - a.evaluation.score)[0];
+        return [...playerResults].sort((a, b) => b.evaluation.normalizedValue - a.evaluation.normalizedValue)[0];
     }, [playerResults]);
 
     const playerColumns = [
@@ -98,19 +93,14 @@ export default function Evaluation() {
         },
         {
             header: "Value",
-            sortField: "suggestedValue",
-            renderCell: (player: PlayerEvaluation) => `$${player.suggestedValue}`,
+            sortField: "evaluation.auctionPrice",
+            renderCell: (player: PlayerEvaluation) => `$${player.evaluation.auctionPrice.toFixed(2)}`,
         },
         {
-            header: "Eval Score",
-            sortField: "evaluation.score",
-            renderCell: (player: PlayerEvaluation) => player.evaluation.score,
-        },
-        {
-            header: "Tier",
-            sortField: "evaluation.tier",
-            renderCell: (player: PlayerEvaluation) => player.evaluation.tier,
-        },
+            header: "Eval",
+            sortField: "evaluation.normalizedValue",
+            renderCell: (player: PlayerEvaluation) => player.evaluation.normalizedValue,
+        }
     ];
 
     return (
@@ -135,7 +125,7 @@ export default function Evaluation() {
 
                     {bestPlayer && (
                         <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm">
-                            Best result: <span className="font-semibold">{bestPlayer.name}</span> | Score {bestPlayer.evaluation.score}
+                            Best result: <span className="font-semibold">{bestPlayer.name}</span> | Score {bestPlayer.evaluation.normalizedValue}
                         </div>
                     )}
                 </div>
@@ -185,13 +175,6 @@ export default function Evaluation() {
                     >
                         {draftLoading ? "Evaluating..." : "Evaluate Drafts"}
                     </button>
-
-                    {draftMeta && (
-                        <div className="rounded-md bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
-                            Source: {draftMeta.source}
-                            {draftMeta.provider ? ` | Provider: ${draftMeta.provider}` : ""}
-                        </div>
-                    )}
 
                     {draftError && (
                         <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">

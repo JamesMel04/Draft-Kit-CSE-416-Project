@@ -62,7 +62,6 @@ export type PlayerEvaluation = {
 	name: string;
 	team: string;
 	positions: Position[];
-	suggestedValue: number;
 	evaluation: {
     normalizedValue: number;
     auctionPrice: number;
@@ -92,13 +91,6 @@ export type DraftEvaluation = {
     value: number;
     score: number;
   };
-};
-
-export type EvaluationMeta = {
-  source: 'backend';
-  provider: string;
-  generatedAt: string;
-  notes: string;
 };
 
 export type LeagueData = {
