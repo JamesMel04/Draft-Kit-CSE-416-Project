@@ -28,25 +28,20 @@ export type Position =
   | "P9";
 
 // ==================== Player positions from source data ====================
+// Changed to be consistent with types from MLB API
 export const PLAYER_POSITIONS = [
-    "C",    // Catcher
-    "1B",   // First base
-    "2B",   // Second base
-    "3B",   // Third base
-    "SS",   // Shortstop
-    "CI",   // Corner infield
-    "MI",   // Middle infield
-    "IF",   // Infield
-    "LF",   // Left field
-    "CF",   // Center field
-    "RF",   // Right field
-    "OF",   // Outfield
-    "DH",   // Designated hitter
-    "U",    // Utility
-    "P",    // Pitcher
-    "SP",   // Starting pitcher
-    "RP",   // Relief pitcher
-    "TWP", // Two-way player
+   "1B",
+    "2B",
+    "3B",
+    "C",
+    "CF",
+    "DH",
+    "LF",
+    "OF",
+    "P",
+    "RF",
+    "SS",
+    "TWP"
 ] as const;
 export type PlayerPosition = typeof PLAYER_POSITIONS[number];
 
@@ -78,6 +73,11 @@ export interface HitterStats {
     slg: number; // slugging percentage, total bases / at bats
     fpts: number; // fantasy points
 }
+export const HITTER_STAT_KEYS : (keyof HitterStats)[] = [
+    'ab', 'r', 'h', '1b', '2b', '3b', 'hr', 'rbi', 'bb', 'k', 'sb', 'cs', 'avg', 'obp', 'slg', 'fpts'
+];
+
+
 
 export interface PitcherStats {
     gp: number;    // games pitched
@@ -100,6 +100,9 @@ export interface PitcherStats {
     avg: number;  // opponent batting average, not in API, initialized as 0
     fpts: number; // fantasy points
 }
+export const PITCHER_STAT_KEYS : (keyof PitcherStats)[] = [
+    'gp', 'era', 'gs', 'w', 'l', 'sho', 'sv', 'ip', 'h', 'er', 'r', 'hr', 'hld', 'hb', 'bb', 'so', 'whip', 'avg', 'fpts'
+];
 
 /** Types for sorting by pitcher or hitter stats */
 export type SortParamHitter = keyof HitterStats | "name" | "team" | "positions";

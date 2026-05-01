@@ -152,24 +152,18 @@ export interface PitcherStats {
 
 // ==================== Player positions from source data ====================
 export const PLAYER_POSITIONS = [
-    "C",    // Catcher
-    "1B",   // First base
-    "2B",   // Second base
-    "3B",   // Third base
-    "SS",   // Shortstop
-    "CI",   // Corner infield
-    "MI",   // Middle infield
-    "IF",   // Infield
-    "LF",   // Left field
-    "CF",   // Center field
-    "RF",   // Right field
-    "OF",   // Outfield
-    "DH",   // Designated hitter
-    "U",    // Utility
-    "P",    // Pitcher
-    "SP",   // Starting pitcher
-    "RP",   // Relief pitcher
-    "TWP", // Two-way player
+   "1B",
+    "2B",
+    "3B",
+    "C",
+    "CF",
+    "DH",
+    "LF",
+    "OF",
+    "P",
+    "RF",
+    "SS",
+    "TWP"
 ] as const;
 export type PlayerPosition = typeof PLAYER_POSITIONS[number];
 
