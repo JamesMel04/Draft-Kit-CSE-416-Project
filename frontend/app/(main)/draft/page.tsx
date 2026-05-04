@@ -26,11 +26,16 @@ export default function Draft() {
   // Config ───────────────────────────────────────────────────────────────────
   const [config, setConfig] = useState<LeagueData>();
 
+  // When the Draft page opens, read draftConfig from browser storage and put it into config
   useEffect(() => {
-    const raw = sessionStorage.getItem("draftConfig");
-    if (!raw) return;
-    try { setConfig(JSON.parse(raw)); }
-    catch { console.error("Failed to parse draft config"); }
+    const loadConfigTimer = window.setTimeout(() => {
+      const raw = sessionStorage.getItem("draftConfig");
+      if (!raw) return;
+      try { setConfig(JSON.parse(raw) as LeagueData); }
+      catch { console.error("Failed to parse draft config"); }
+    }, 0);
+
+    return () => window.clearTimeout(loadConfigTimer);
   }, []);
 
   const teams: TeamName[] = useMemo(
@@ -155,9 +160,9 @@ export default function Draft() {
       }));
       await Promise.all(drafts.map((draft) => saveDraft(draft)));
       setSubmitStatus('success');
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSubmitStatus('error');
-      setSubmitError(err?.message ?? 'Failed to save drafts');
+      setSubmitError(err instanceof Error ? err.message : 'Failed to save drafts');
     }
   }, [teams, user?.sub, rosterIds]);
 
@@ -172,27 +177,31 @@ export default function Draft() {
 
   useEffect(() => {
     if (!activePlayerName) {
-      setSelectedEvaluation(null);
-      setEvaluationError(null);
       return;
     }
     let cancelled = false;
-    setEvaluationLoading(true);
-    getEvaluatedPlayers()
-      .then((res) => {
-        if (cancelled) return;
-        const match = res.players.find((p) => p.name === activePlayerName);
-        setSelectedEvaluation(match ?? res.players[0] ?? null);
-        setEvaluationError(null);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setSelectedEvaluation(null);
-          setEvaluationError("Could not load selected player evaluation.");
-        }
-      })
-      .finally(() => { if (!cancelled) setEvaluationLoading(false); });
-    return () => { cancelled = true; };
+    const loadEvaluationTimer = window.setTimeout(() => {
+      setEvaluationLoading(true);
+      getEvaluatedPlayers()
+        .then((res) => {
+          if (cancelled) return;
+          const match = res.players.find((p) => p.name === activePlayerName);
+          setSelectedEvaluation(match ?? res.players[0] ?? null);
+          setEvaluationError(null);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setSelectedEvaluation(null);
+            setEvaluationError("Could not load selected player evaluation.");
+          }
+        })
+        .finally(() => { if (!cancelled) setEvaluationLoading(false); });
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(loadEvaluationTimer);
+    };
   }, [activePlayerName]);
 
   // View ─────────────────────────────────────────────────────────────────────
@@ -240,6 +249,8 @@ export default function Draft() {
         onViewModeChange={setViewMode}
         onCancelPending={clearActionState}
       />
+
+      <TaxiDraftSummary taxiDraft={config?.taxiDraft} />
 
       {/* Roster Grid */}
       <RosterGrid
@@ -289,8 +300,51 @@ export default function Draft() {
   );
 }
 
-// ─── Price Modal ──────────────────────────────────────────────────────────────
+// Taxi Draft Summary
+function TaxiDraftSummary({ taxiDraft }: { taxiDraft?: LeagueData["taxiDraft"] }) {
+  if (!taxiDraft?.enabled) return null;
 
+  return (
+    <section className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-base font-bold text-slate-900">Taxi Draft</h2>
+          <p className="mt-1 text-sm text-slate-500">Minor leaguers only, using the configured taxi pick order.</p>
+        </div>
+        <span className="self-start rounded-md bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+          {taxiDraft.rosterSlots} slots/team
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Eligible Players</div>
+          <div className="mt-1 text-sm font-semibold text-slate-900">Minor leaguers only</div>
+        </div>
+
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Pick Order</div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {taxiDraft.draftOrder.length ? (
+              taxiDraft.draftOrder.map((team, idx) => (
+                <span
+                  key={`${team}-${idx}`}
+                  className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"
+                >
+                  {idx + 1}. {team}
+                </span>
+              ))
+            ) : (
+              <span className="text-sm text-slate-400">No order configured</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Price Modal
 function PriceModal({
   playerName,
   team,
@@ -425,7 +479,7 @@ function DraftHeader({
       </h1>
       <p className="mt-1 text-sm text-slate-600">Personal companion board for tracking your draft strategy.</p>
 
-      <div className="mt-3 flex flex-wrap gap-3 rounded-xl bg-gradient-to-r from-slate-700 to-blue-700 px-4 py-3 text-white shadow-sm">
+      <div className="mt-3 flex flex-wrap gap-3 rounded-xl bg-linear-to-r from-slate-700 to-blue-700 px-4 py-3 text-white shadow-sm">
         <span className="font-semibold">League: {config?.name ?? "—"}</span>
         <span>Format: {teams.length}-Team Auction</span>
         <span>Starting Budget: ${config?.startingBudget ?? "—"}</span>

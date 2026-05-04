@@ -39,7 +39,7 @@ export type PlayerData = {
   id: PlayerID;
   name: string;
   team: string;
-  positions: Position[];
+  positions?: Position[];
   suggestedValue: number;
   priceSold?: number;
   stats: {
@@ -53,7 +53,7 @@ export type PlayerEvaluation = {
 	id: PlayerID;
 	name: string;
 	team: string;
-	positions: Position[];
+	positions?: Position[];
 	evaluation: {
     normalizedValue: number;
     auctionPrice: number;
@@ -67,6 +67,14 @@ export type DraftSlotEvaluation = {
 
 export type RosterData = {
   roster: Partial<Record<Position, PlayerID | undefined>>;
+};
+
+export type TaxiDraftConfig = {
+  enabled: boolean;
+  rosterSlots: number;
+  eligiblePlayerType: "minor-leaguers";
+  draftOrder: TeamName[];
+  rosters: Record<TeamName, PlayerID[]>;
 };
 
 export type DraftData = {
@@ -90,6 +98,8 @@ export type LeagueData = {
   name: string;
   startingBudget: number;
   teams: Record<TeamName, RosterData>;
+  // optional taxi draft config data if needed
+  taxiDraft?: TaxiDraftConfig;
 };
 
 export type SortField = string;
