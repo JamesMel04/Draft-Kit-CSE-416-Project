@@ -128,7 +128,7 @@ function PitchersTable({ players } : {players : PitcherPlayer[]}) {
                 {player.team}
               </td>
               <td className={bodyCellClass}>
-                {player.position}
+                {player.mlbPositions?.join(", ") || "-"}
               </td>
 
               {statColumns.map((statName) => (

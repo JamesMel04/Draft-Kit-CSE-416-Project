@@ -250,6 +250,14 @@ export type RosterData = {
   roster: Partial<Record<Position, PlayerID | undefined>>;
 };
 
+export type TaxiDraftConfig = {
+  enabled: boolean;
+  rosterSlots: number;
+  eligiblePlayerType: "minor-leaguers";
+  draftOrder: TeamName[];
+  rosters: Record<TeamName, PlayerID[]>;
+};
+
 export type DraftData = {
   userId: string;
   id: DraftID;
@@ -271,6 +279,8 @@ export type LeagueData = {
   name: string;
   startingBudget: number;
   teams: Record<TeamName, RosterData>;
+  // optional taxi draft config data if needed
+  taxiDraft?: TaxiDraftConfig;
 };
 
 

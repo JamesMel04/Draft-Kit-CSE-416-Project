@@ -23,7 +23,7 @@ function PlayerSidebar({player} : {player : PlayerData}) {
                 <div className="flex items-center justify-center h-40 bg-blue-950 rounded text-sm font-bold text-white" style={{ marginBottom: "0.67rem" }}>Photo</div>
                 <h2 className="text-sm font-bold">{player.name}</h2>
                 <p className="text-sm font-bold">{player.team}</p>
-        <p className="text-sm font-bold">{player.positions.join(", ")}</p>
+        <p className="text-sm font-bold">{player.positions?.join(", ") || "No position listed"}</p>
             </div>
 
             <div className="bg-emerald-500 rounded-lg" style={{ padding: "0.67rem" }}>

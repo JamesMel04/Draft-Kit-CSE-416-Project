@@ -21,6 +21,12 @@ export default function LeagueConfigPage() {
     { name: "Team 1", roster: {} },
     { name: "Team 2", roster: {} },
   ]);
+
+  // Taxi league config
+  const [taxiDraftEnabled, setTaxiDraftEnabled] = useState(true);
+  const [taxiRosterSlots, setTaxiRosterSlots] = useState(4);
+  const [taxiDraftOrder, setTaxiDraftOrder] = useState<number[]>([0, 1]);
+
   const [players, setPlayers] = useState<PlayerData[]>([]);
   const [loading, setLoading] = useState(false);
   const [playerSearch, setPlayerSearch] = useState("");
@@ -105,13 +111,48 @@ export default function LeagueConfigPage() {
   };
 
   const handleAddTeam = () => {
+    const newTeamIndex = teams.length;
     setTeams((prev) => [...prev, { name: `Team ${prev.length + 1}`, roster: {} }]);
+    // Each team gets a separate taxi team in the defined order
+    setTaxiDraftOrder((prev) => [...prev, newTeamIndex]);
   };
 
   const handleRemoveTeam = (idx: number) => {
     setTeams((prev) => prev.filter((_, i) => i !== idx));
     setLocalTeamNames((prev) => { const n = { ...prev }; delete n[idx]; return n; });
+    setTaxiDraftOrder((prev) =>
+      prev
+        .filter((teamIndex) => teamIndex !== idx)
+        .map((teamIndex) => (teamIndex > idx ? teamIndex - 1 : teamIndex))
+    );
   };
+
+  // Handler when Taxi Slots per team changes by the user
+  const handleTaxiRosterSlotsChange = (value: string) => {
+    const nextValue = Math.max(0, Number(value) || 0);
+    setTaxiRosterSlots(nextValue);
+  };
+
+  // Arrows to change taxi draft order
+  const moveTaxiDraftOrderTeam = (orderIndex: number, direction: -1 | 1) => {
+    setTaxiDraftOrder((prev) => {
+      const nextIndex = orderIndex + direction;
+      if (nextIndex < 0 || nextIndex >= prev.length) {
+        return prev;
+      }
+
+      const next = [...prev];
+      [next[orderIndex], next[nextIndex]] = [next[nextIndex], next[orderIndex]];
+      return next;
+    });
+  };
+
+  // to match the order to main draft
+  const resetTaxiDraftOrder = () => {
+    setTaxiDraftOrder(teams.map((_, idx) => idx));
+  };
+
+  const getTeamDisplayName = (idx: number) => localTeamNames[idx] ?? teams[idx]?.name ?? `Team ${idx + 1}`;
 
   const handleAssignTeam = useCallback((playerId: PlayerID, newIdx: number) => {
     setAssignTeamByPlayer((prev) => ({ ...prev, [playerId]: newIdx }));
@@ -147,18 +188,39 @@ export default function LeagueConfigPage() {
   }, []);
 
   const handleStartDraft = () => {
+    const parsedBudget = Number(localBudget);
+    const resolvedLeagueName = localLeagueName.trim() || leagueName;
+    const resolvedBudget = Number.isFinite(parsedBudget) && parsedBudget >= 0 ? parsedBudget : budget;
+    const resolvedTeams = teams.map((team, idx) => ({
+      ...team,
+      name: (localTeamNames[idx] ?? team.name).trim() || `Team ${idx + 1}`,
+    }));
+    const taxiDraftOrderNames = taxiDraftOrder.reduce<string[]>((order, teamIndex) => {
+      const teamName = resolvedTeams[teamIndex]?.name;
+      if (teamName) order.push(teamName);
+      return order;
+    }, []);
+
+    // Stores draftConfig into session
     const payload: LeagueData = {
       id: `league-${Date.now()}`,
-      name: leagueName,
-      startingBudget: budget,
+      name: resolvedLeagueName,
+      startingBudget: resolvedBudget,
       teams: Object.fromEntries(
-        teams.map((t) => [
+        resolvedTeams.map((t) => [
           t.name,
           {
             roster: Object.fromEntries(allPositions.map((pos) => [pos, t.roster[pos]?.id]))
           }
         ])
       ),
+      taxiDraft: {
+        enabled: taxiDraftEnabled,
+        rosterSlots: taxiDraftEnabled ? taxiRosterSlots : 0,
+        eligiblePlayerType: "minor-leaguers",
+        draftOrder: taxiDraftEnabled ? taxiDraftOrderNames : [],
+        rosters: Object.fromEntries(resolvedTeams.map((team) => [team.name, []])),
+      },
     };
     sessionStorage.setItem("draftConfig", JSON.stringify(payload));
     router.push("/draft");
@@ -213,6 +275,138 @@ export default function LeagueConfigPage() {
             </div>
           </div>
         </div>
+
+        {/* TAXI DRAFT SETUP */}
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className={`flex flex-col gap-4 md:flex-row md:items-center md:justify-between ${taxiDraftEnabled ? "border-b border-slate-100 pb-5" : ""}`}>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Taxi Draft</h2>
+              <p className="mt-1 text-sm text-slate-500">Set taxi roster size, eligibility, and pick order.</p>
+            </div>
+
+            <label className="flex items-center gap-3 text-sm font-semibold text-slate-700">
+              <span>{taxiDraftEnabled ? "Enabled" : "Disabled"}</span>
+              <input
+                type="checkbox"
+                checked={taxiDraftEnabled}
+                onChange={(e) => setTaxiDraftEnabled(e.target.checked)}
+                className="peer sr-only"
+              />
+              <span className="relative h-6 w-11 rounded-full bg-slate-200 transition-colors after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:bg-emerald-600 peer-checked:after:translate-x-5" />
+            </label>
+          </div>
+
+          {taxiDraftEnabled ? (
+          <div className="grid gap-6 pt-5 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Taxi Slots Per Team
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={taxiRosterSlots}
+                    onChange={(e) => handleTaxiRosterSlotsChange(e.target.value)}
+                    disabled={!taxiDraftEnabled}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Eligible Players
+                  </label>
+                  <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">
+                    Minor leaguers only
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-bold text-slate-800">Taxi Roster Preview</h3>
+                  <span className="text-xs font-semibold text-slate-400">
+                    {teams.length * taxiRosterSlots} slots
+                  </span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  {teams.map((_, teamIdx) => (
+                    <div key={teamIdx} className="rounded-lg border border-slate-200 bg-white p-3">
+                      <div className="mb-2 text-sm font-semibold text-slate-800">
+                        {getTeamDisplayName(teamIdx)}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {Array.from({ length: taxiRosterSlots }).map((__, slotIdx) => (
+                          <div
+                            key={slotIdx}
+                            className="rounded-md border border-dashed border-slate-200 px-2 py-1.5 text-xs font-medium text-slate-400"
+                          >
+                            T{slotIdx + 1} Empty
+                          </div>
+                        ))}
+                        {taxiRosterSlots === 0 ? (
+                          <div className="col-span-2 text-xs font-medium text-slate-400">
+                            No taxi slots
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-slate-200">
+              <div className="flex flex-col gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <h3 className="text-sm font-bold text-slate-800">Taxi Draft Order</h3>
+                <button
+                  type="button"
+                  onClick={resetTaxiDraftOrder}
+                  disabled={!taxiDraftEnabled}
+                  className="self-start rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
+                >
+                  Match Team List
+                </button>
+              </div>
+
+              <div className="divide-y divide-slate-100">
+                {taxiDraftOrder.map((teamIndex, orderIndex) => (
+                  <div key={`${teamIndex}-${orderIndex}`} className="grid grid-cols-[44px_minmax(0,1fr)_80px] items-center gap-3 px-4 py-3">
+                    <div className="text-sm font-bold text-slate-400">
+                      {orderIndex + 1}
+                    </div>
+                    <div className="min-w-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800">
+                      {getTeamDisplayName(teamIndex)}
+                    </div>
+                    <div className="flex justify-end gap-1">
+                      <button
+                        type="button"
+                        aria-label={`Move ${getTeamDisplayName(teamIndex)} earlier`}
+                        onClick={() => moveTaxiDraftOrderTeam(orderIndex, -1)}
+                        disabled={!taxiDraftEnabled || orderIndex === 0}
+                        className="grid h-8 w-8 place-items-center rounded-md border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
+                      >
+                        ^
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Move ${getTeamDisplayName(teamIndex)} later`}
+                        onClick={() => moveTaxiDraftOrderTeam(orderIndex, 1)}
+                        disabled={!taxiDraftEnabled || orderIndex === taxiDraftOrder.length - 1}
+                        className="grid h-8 w-8 place-items-center rounded-md border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300"
+                      >
+                        v
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          ) : null}
+        </section>
 
         {/* MAIN GRID */}
         <div className="grid gap-6 lg:grid-cols-2 items-start">

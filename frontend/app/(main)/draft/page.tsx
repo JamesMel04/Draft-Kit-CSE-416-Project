@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PlayerEvaluation, Position, RosterSlot, DraftData, PlayerData, LeagueData, Player, PlayerID } from '@/_lib/types';
-import { getPlayers, saveDraft } from '@/_lib/api';
+import { getPlayers, saveDraft, getEvaluatedPlayers } from '@/_lib/api';
 import { allPositions, allSearchFilterPositions } from '@/_lib/consts';
-import { getEvaluatedPlayers } from '@/_lib/api';
 import PlayerEvaluationPanel from '@/components/players/player_evaluation_panel';
 import { useUser } from '@auth0/nextjs-auth0';
 
@@ -30,13 +29,9 @@ export default function Draft() {
 
   useEffect(() => {
     const raw = sessionStorage.getItem("draftConfig");
-    if (raw) {
-      try {
-        setConfig(JSON.parse(raw));
-      } catch {
-        console.error("Failed to parse draft config");
-      }
-    }
+    if (!raw) return;
+    try { setConfig(JSON.parse(raw)); }
+    catch { console.error("Failed to parse draft config"); }
   }, []);
 
   const teams: TeamName[] = useMemo(() => {
@@ -146,9 +141,9 @@ export default function Draft() {
       const drafts = buildDraftData();
       await Promise.all(drafts.map((draft) => saveDraft(draft)));
       setSubmitStatus('success');
-    } catch (err: any) {
+    } catch (err) {
       setSubmitStatus('error');
-      setSubmitError(err?.message || 'Failed to save drafts');
+      setSubmitError(err instanceof Error ? err.message : 'Failed to save drafts');
     }
   }
 
@@ -159,7 +154,6 @@ export default function Draft() {
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("hitters");
   const [selectedEvaluation, setSelectedEvaluation] = useState<PlayerEvaluation | null>(null);
-  const [evaluationSource, setEvaluationSource] = useState<"backend" | "fallback" | null>(null);
   const [evaluationLoading, setEvaluationLoading] = useState(false);
   const [evaluationError, setEvaluationError] = useState<string | null>(null);
   const [assignTeamByPlayer, setAssignTeamByPlayer] = useState<Partial<Record<string, TeamName>>>({});
@@ -299,22 +293,19 @@ export default function Draft() {
     const load = async () => {
       if (!activePlayerName) {
         setSelectedEvaluation(null);
-        setEvaluationSource(null);
         setEvaluationError(null);
         return;
       }
       try {
         setEvaluationLoading(true);
-        const response = await getEvaluatedPlayers({name: activePlayerName });
+        const response = await getEvaluatedPlayers({ name: activePlayerName });
         const exact = response.players.find(
           (p) => p.name.toLowerCase() === activePlayerName.toLowerCase()
         );
         setSelectedEvaluation(exact ?? response.players[0] ?? null);
-        setEvaluationSource(response.meta.source);
         setEvaluationError(null);
       } catch {
         setSelectedEvaluation(null);
-        setEvaluationSource(null);
         setEvaluationError("Could not load selected player evaluation.");
       } finally {
         setEvaluationLoading(false);
@@ -345,8 +336,7 @@ export default function Draft() {
     },
     {
       header: "Eval",
-      renderCell: (player: PlayerEvaluation) =>
-        `${player.evaluation.normalizedValue}`,
+      renderCell: (player: PlayerEvaluation) => `${player.evaluation.normalizedValue}`,
     },
     {
       header: "Assign Team",
@@ -488,18 +478,7 @@ export default function Draft() {
         {/* SELECTED PLAYER EVALUATION */}
         {activePlayerName && (
           <div className="mt-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Selected Evaluation</h2>
-              {evaluationSource && (
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                  evaluationSource === "backend"
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-amber-100 text-amber-800"
-                }`}>
-                  {evaluationSource}
-                </span>
-              )}
-            </div>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Selected Evaluation</h2>
             {evaluationLoading ? (
               <p className="mt-1 text-xs text-slate-500">Loading evaluation...</p>
             ) : evaluationError ? (
@@ -508,7 +487,7 @@ export default function Draft() {
               <div className="mt-2 grid gap-2 sm:grid-cols-4">
                 {[
                   { label: "Player", value: selectedEvaluation.name },
-                  { label: "Value", value: `$${selectedEvaluation.suggestedValue}` },
+                  { label: "Suggested Value", value: `$${selectedEvaluation.suggestedValue}` },
                   { label: "Auction Price", value: `$${selectedEvaluation.evaluation.auctionPrice}` },
                   { label: "Eval Score", value: selectedEvaluation.evaluation.normalizedValue },
                 ].map(({ label, value }) => (
