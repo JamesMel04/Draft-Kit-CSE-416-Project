@@ -94,7 +94,7 @@ export default function Evaluation() {
         {
             header: "Pos",
             sortField: "positions",
-            renderCell: (player: PlayerEvaluation) => player.positions.join(", "),
+            renderCell: (player: PlayerEvaluation) => player.positions?.join(", ") || "-",
         },
         {
             header: "Value",

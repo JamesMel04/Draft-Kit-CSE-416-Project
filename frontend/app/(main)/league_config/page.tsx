@@ -188,18 +188,39 @@ export default function LeagueConfigPage() {
   }, []);
 
   const handleStartDraft = () => {
+    const parsedBudget = Number(localBudget);
+    const resolvedLeagueName = localLeagueName.trim() || leagueName;
+    const resolvedBudget = Number.isFinite(parsedBudget) && parsedBudget >= 0 ? parsedBudget : budget;
+    const resolvedTeams = teams.map((team, idx) => ({
+      ...team,
+      name: (localTeamNames[idx] ?? team.name).trim() || `Team ${idx + 1}`,
+    }));
+    const taxiDraftOrderNames = taxiDraftOrder.reduce<string[]>((order, teamIndex) => {
+      const teamName = resolvedTeams[teamIndex]?.name;
+      if (teamName) order.push(teamName);
+      return order;
+    }, []);
+
+    // Stores draftConfig into session
     const payload: LeagueData = {
       id: `league-${Date.now()}`,
-      name: leagueName,
-      startingBudget: budget,
+      name: resolvedLeagueName,
+      startingBudget: resolvedBudget,
       teams: Object.fromEntries(
-        teams.map((t) => [
+        resolvedTeams.map((t) => [
           t.name,
           {
             roster: Object.fromEntries(allPositions.map((pos) => [pos, t.roster[pos]?.id]))
           }
         ])
       ),
+      taxiDraft: {
+        enabled: taxiDraftEnabled,
+        rosterSlots: taxiDraftEnabled ? taxiRosterSlots : 0,
+        eligiblePlayerType: "minor-leaguers",
+        draftOrder: taxiDraftEnabled ? taxiDraftOrderNames : [],
+        rosters: Object.fromEntries(resolvedTeams.map((team) => [team.name, []])),
+      },
     };
     sessionStorage.setItem("draftConfig", JSON.stringify(payload));
     router.push("/draft");

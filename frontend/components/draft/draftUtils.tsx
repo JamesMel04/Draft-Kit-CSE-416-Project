@@ -12,7 +12,9 @@ export function isPitcherPosition(pos: string): boolean {
   return ["SP", "RP", "P"].includes(normalizePlayerPosition(pos));
 }
 
-export function canPlayerFitSlot(playerPositions: string[], slot: Position): boolean {
+export function canPlayerFitSlot(playerPositions: string[] | undefined, slot: Position): boolean {
+  if (!playerPositions?.length) return false;
+
   const normalized = playerPositions.map(normalizePlayerPosition);
   const hasPitcherPosition = normalized.some(isPitcherPosition);
   if (slot.startsWith("P")) return hasPitcherPosition;

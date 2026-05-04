@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { PlayerEvaluation, Position, PlayerID, TeamName } from '@/_lib/types';
 import { getOpenCompatibleSlots } from './draftUtils';
 
@@ -19,12 +19,6 @@ export function usePlayerAssignment(
   const [assignTeamByPlayer, setAssignTeamByPlayer] = useState<Partial<Record<string, TeamName>>>({});
   const [assignSlotByPlayer, setAssignSlotByPlayer] = useState<Partial<Record<string, Position>>>({});
 
-  // Refs so callbacks always read current values without stale closures
-  const assignTeamRef = useRef(assignTeamByPlayer);
-  const assignSlotRef = useRef(assignSlotByPlayer);
-  assignTeamRef.current = assignTeamByPlayer;
-  assignSlotRef.current = assignSlotByPlayer;
-
   const getTeamForPlayer = (playerId: PlayerID) => assignTeamByPlayer[playerId] ?? teams[0];
   const getSlotForPlayer = (playerId: PlayerID) => assignSlotByPlayer[playerId];
 
@@ -39,16 +33,15 @@ export function usePlayerAssignment(
   }, [rosterNames]);
 
   const handleAddFromSearch = useCallback((player: PlayerEvaluation) => {
-    // Read from refs to guarantee current values, not stale closure snapshots
-    const team = assignTeamRef.current[player.id] ?? teams[0];
+    const team = assignTeamByPlayer[player.id] ?? teams[0];
     const openSlots = getOpenCompatibleSlots(rosterNames[team]?.roster ?? {}, player);
-    const slot = assignSlotRef.current[player.id] ?? openSlots[0];
+    const slot = assignSlotByPlayer[player.id] ?? openSlots[0];
     if (!slot) {
       window.alert("No compatible open slot for this team.");
       return;
     }
     onAdd(team, slot, player.name, player.id);
-  }, [teams, rosterNames, onAdd]);
+  }, [assignTeamByPlayer, assignSlotByPlayer, teams, rosterNames, onAdd]);
 
   const columns: Column[] = [
     {
@@ -59,7 +52,7 @@ export function usePlayerAssignment(
     {
       header: "Pos",
       sortField: "positions",
-      renderCell: (player) => player.positions.join(", "),
+      renderCell: (player) => player.positions?.join(", ") ?? "",
     },
     {
       header: "Value",

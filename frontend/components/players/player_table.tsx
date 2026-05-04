@@ -100,7 +100,7 @@ export default function PlayerTable({ players }  : {players : PlayerData[] | nul
                 {player.team}
               </td>
               <td className={bodyCellClass}>
-                {player.positions.join(", ")}
+                {player.positions?.join(", ") || "-"}
               </td>
 
               {statColumns.map((statName) => (
