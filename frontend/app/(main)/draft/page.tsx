@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PlayerEvaluation, Position, RosterSlot, DraftData, PlayerData, LeagueData, Player } from '@/_lib/types';
+import { PlayerEvaluation, Position, RosterSlot, DraftData, PlayerData, LeagueData, Player, PlayerID } from '@/_lib/types';
 import { getPlayers, saveDraft } from '@/_lib/api';
 import { allPositions, allSearchFilterPositions } from '@/_lib/consts';
 import { getEvaluatedPlayers } from '@/_lib/api';
@@ -68,10 +68,10 @@ export default function Draft() {
     teams.forEach((team) => {
       completed[team] = {} as any;
       allPositions.forEach((pos) => {
-        const playerId = config?.teams?.[team]?.[pos];
+        const playerId = config?.teams?.[team]?.roster[pos];
         if (playerId) {
           const match = players.find((p) => p.id === playerId);
-          completed[team][pos] = match?.name ?? playerId;
+          completed[team][pos] = match?.name ?? String(playerId);
         } else {
           completed[team][pos] = null;
         }
@@ -84,19 +84,19 @@ export default function Draft() {
   // ROSTER IDS
   // -------------------------
   const fullRosterIds = useMemo(() => {
-    if (!config?.teams) return {} as Record<TeamName, Record<Position, string | null>>;
-    const completed: Record<TeamName, Record<Position, string | null>> = {} as any;
+    if (!config?.teams) return {} as Record<TeamName, Record<Position, PlayerID | null>>;
+    const completed: Record<TeamName, Record<Position, PlayerID | null>> = {} as any;
     for (const team of teams) {
       completed[team] = {} as any;
       for (const pos of allPositions) {
-        completed[team][pos] = config.teams[team]?.[pos] || null;
+        completed[team][pos] = config.teams[team]?.roster[pos] ?? null;
       }
     }
     return completed;
   }, [teams, config]);
 
   const [roster, setRoster] = useState<Record<TeamName, Record<Position, string | null>>>({});
-  const [rosterPlayerIds, setRosterPlayerIds] = useState<Record<TeamName, Record<Position, string | null>>>({});
+  const [rosterPlayerIds, setRosterPlayerIds] = useState<Record<TeamName, Record<Position, PlayerID | null>>>({});
 
   useEffect(() => { setRoster(fullRoster); }, [fullRoster]);
   useEffect(() => { setRosterPlayerIds(fullRosterIds); }, [fullRosterIds]);
@@ -134,8 +134,8 @@ export default function Draft() {
       userId: user?.sub,
       teamName: team,
       roster: Object.fromEntries(
-        allPositions.map((pos) => [pos, rosterPlayerIds?.[team]?.[pos] ?? ''])
-      ) as Record<Position, string>,
+        allPositions.map((pos) => [pos, rosterPlayerIds?.[team]?.[pos] ?? undefined])
+      ) as Partial<Record<Position, PlayerID | undefined>>,
     }));
   }
 
@@ -178,7 +178,7 @@ export default function Draft() {
     team: TeamName,
     pos: Position,
     player: string | null,
-    playerId: string | null = null
+    playerId: PlayerID | null = null
   ) => {
     setRoster((prev) => ({ ...prev, [team]: { ...prev[team], [pos]: player } }));
     setRosterPlayerIds((prev) => ({ ...prev, [team]: { ...prev[team], [pos]: playerId } }));
@@ -246,7 +246,7 @@ export default function Draft() {
   }, [viewMode]);
 
   const takenPlayerIds = useMemo(() => {
-    const taken = new Set<string>();
+    const taken = new Set<PlayerID>();
     teams.forEach((team) => {
       allPositions.forEach((pos) => {
         const playerId = rosterPlayerIds[team]?.[pos];
@@ -265,7 +265,7 @@ export default function Draft() {
   // -------------------------
   // PLAYER PANEL HANDLERS
   // -------------------------
-  const handleAssignTeamChange = useCallback((playerId: string, team: TeamName, player: PlayerEvaluation) => {
+  const handleAssignTeamChange = useCallback((playerId: PlayerID, team: TeamName, player: PlayerEvaluation) => {
     setAssignTeamByPlayer((prev) => ({ ...prev, [playerId]: team }));
     setAssignSlotByPlayer((prev) => ({
       ...prev,
@@ -329,26 +329,24 @@ export default function Draft() {
   const availablePlayerColumns = useMemo(() => [
     {
       header: "Player",
-      sortField: "name",
+      sortField: "name" as const,
       renderCell: (player: PlayerEvaluation) => (
         <span className="font-semibold">{player.name}</span>
       ),
     },
     {
       header: "Pos",
-      sortField: "positions",
+      sortField: "positions" as const,
       renderCell: (player: PlayerEvaluation) => player.positions.join(", "),
     },
     {
       header: "Value",
-      sortField: "suggestedValue",
       renderCell: (player: PlayerEvaluation) => `$${player.suggestedValue}`,
     },
     {
       header: "Eval",
-      sortField: "evaluation.score",
       renderCell: (player: PlayerEvaluation) =>
-        `${player.evaluation.score} (${player.evaluation.tier})`,
+        `${player.evaluation.normalizedValue}`,
     },
     {
       header: "Assign Team",
@@ -511,8 +509,8 @@ export default function Draft() {
                 {[
                   { label: "Player", value: selectedEvaluation.name },
                   { label: "Value", value: `$${selectedEvaluation.suggestedValue}` },
-                  { label: "Eval Score", value: selectedEvaluation.evaluation.score },
-                  { label: "Tier / Confidence", value: `${selectedEvaluation.evaluation.tier} / ${Math.round(selectedEvaluation.evaluation.confidence * 100)}%` },
+                  { label: "Auction Price", value: `$${selectedEvaluation.evaluation.auctionPrice}` },
+                  { label: "Eval Score", value: selectedEvaluation.evaluation.normalizedValue },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <div className="text-xs text-slate-500">{label}</div>
