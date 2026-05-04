@@ -4,7 +4,9 @@ Draft Kit Frontend: [https://draft-kit-frontend-cse-416-project.onrender.com/](h
 
 Draft Kit Backend: [https://draft-kit-backend-cse-416-project.onrender.com/](https://draft-kit-backend-cse-416-project.onrender.com)
 
-API URL: [https://api-cse-416-project-5a0b.onrender.com/](https://api-cse-416-project-5a0b.onrender.com)
+API Backend URL: [https://api-cse-416-project-5a0b.onrender.com/](https://api-cse-416-project-5a0b.onrender.com)]
+
+API Frontend URL: [https://api-cse-416-project-1.onrender.com/](https://api-cse-416-project-1.onrender.com/)
 
 ## Instructions to run Backend
 

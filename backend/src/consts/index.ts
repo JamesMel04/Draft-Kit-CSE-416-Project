@@ -1,5 +1,5 @@
-import { requiredEnv } from "@/utils/env-reader";
-import { LeagueSettings, LeagueState} from "@/types";
+import { requiredEnv } from "../utils/env-reader";
+import { LeagueSettings, LeagueState} from "../types";
 
 export const MLB_API_KEY = requiredEnv('MLB_API_KEY');
 
@@ -55,7 +55,7 @@ export const defaultRosterSlotsCounts = {
 };
 
 export const defaultLeagueSettings: LeagueSettings = {
-    budget: 100,
+    budget: 260,
     teamCount: 1,
     rosterSlots: defaultRosterSlotsCounts
 };

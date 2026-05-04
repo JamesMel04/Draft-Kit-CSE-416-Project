@@ -1,4 +1,4 @@
-import { HITTER_SCORING_CATEGORIES, PITCHER_SCORING_CATEGORIES, ROSTER_SLOTS } from "@/consts";
+import { HITTER_SCORING_CATEGORIES, PITCHER_SCORING_CATEGORIES, ROSTER_SLOTS } from "../consts";
 
 export type PlayerID = number;
 export type DraftID = string;
@@ -92,13 +92,6 @@ export type DraftEvaluation = {
     value: number;
     score: number;
   };
-};
-
-export type EvaluationMeta = {
-  source: 'backend';
-  provider: string;
-  generatedAt: string;
-  notes: string;
 };
 
 export type LeagueData = {

@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/24/outline';
-import { PlayerEvaluation, PlayerEvaluationQueryParams, EvaluationMeta, Position, SortAsc, SortField, LeagueData } from '@/_lib/types';
+import { PlayerEvaluation, PlayerEvaluationQueryParams, Position, SortAsc, SortField, LeagueData, PlayerID, SearchFilterPosition } from '@/_lib/types';
 import { getEvaluatedPlayers } from '@/_lib/api';
 import { sortEvaluatedPlayers } from '@/utils/sorters';
 
@@ -16,17 +16,16 @@ type PlayerEvaluationPanelProps = {
   title: string;
   description: string;
   columns: PlayerEvaluationColumn[];
-  positionOptions: string[];
+  positionOptions: SearchFilterPosition[];
   emptyMessage: string;
   showClearFilters?: boolean;
   defaultSort?: SortField;
   defaultAsc?: SortAsc;
   initialSearchOnMount?: boolean;
-  hiddenPlayerIds?: string[];
+  hiddenPlayerIds?: PlayerID[];
   buildFilters?: (base: PlayerEvaluationQueryParams) => PlayerEvaluationQueryParams;
   onResultsChange?: (payload: {
     players: PlayerEvaluation[];
-    meta: EvaluationMeta | null;
   }) => void;
   leagueData?: LeagueData;
 };
@@ -46,13 +45,12 @@ export default function PlayerEvaluationPanel({
   onResultsChange,
   leagueData = undefined,
 }: PlayerEvaluationPanelProps) {
-  const [source, setSource] = useState<"backend" | "fallback" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [minPriceInput, setMinPriceInput] = useState("");
   const [maxPriceInput, setMaxPriceInput] = useState("");
-  const [selectedPositions, setSelectedPositions] = useState<Position[]>([]);
+  const [selectedPositions, setSelectedPositions] = useState<SearchFilterPosition[]>([]);
   const [players, setPlayers] = useState<PlayerEvaluation[]>([]);
   const [sortField, setSortField] = useState<SortField>(defaultSort);
   const [sortAsc, setSortAsc] = useState<SortAsc>(defaultAsc);
@@ -97,19 +95,17 @@ export default function PlayerEvaluationPanel({
       const response = await getEvaluatedPlayers(filters, leagueData);
 
       setPlayers(response.players);
-      setSource(response.meta.source);
-      onResultsChange?.({ players: response.players, meta: response.meta });
+      onResultsChange?.({ players: response.players });
     } catch {
       setPlayers([]);
-      setSource(null);
       setError("Failed to evaluate players.");
-      onResultsChange?.({ players: [], meta: null });
+      onResultsChange?.({ players: [] });
     } finally {
       setLoading(false);
     }
   };
 
-  const togglePosition = (position: Position) => {
+  const togglePosition = (position: SearchFilterPosition) => {
     setSelectedPositions((prev) =>
       prev.includes(position) ? prev.filter((p) => p !== position) : [...prev, position]
     );
@@ -136,17 +132,6 @@ export default function PlayerEvaluationPanel({
     <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-xl font-bold">{title}</h2>
-        {source && (
-          <span
-            className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
-              source === "backend"
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-amber-100 text-amber-800"
-            }`}
-          >
-            {source}
-          </span>
-        )}
       </div>
 
       <p className="text-xs text-slate-500">{description}</p>
@@ -178,8 +163,7 @@ export default function PlayerEvaluationPanel({
         <div className="mb-2 text-xs font-semibold uppercase text-slate-600">Positions</div>
         <div className="flex flex-wrap gap-2">
           {positionOptions.map((pos) => {
-            const position = pos as Position;
-            const selected = selectedPositions.includes(position);
+            const selected = selectedPositions.includes(pos);
             return (
               <label
                 key={pos}
@@ -192,7 +176,7 @@ export default function PlayerEvaluationPanel({
                 <input
                   type="checkbox"
                   checked={selected}
-                  onChange={() => togglePosition(position)}
+                  onChange={() => togglePosition(pos)}
                   className="sr-only"
                 />
                 {pos}

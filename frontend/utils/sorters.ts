@@ -1,4 +1,4 @@
-import { PlayerData, PlayerEvaluation, SortField, SortAsc } from '@/_lib/types';
+import { PlayerData, PlayerEvaluation, SortField, SortAsc, Position, SearchFilterPosition } from '@/_lib/types';
 
 type SortValue = string | number | null | undefined;
 type SortFieldInput = SortField | null | undefined;
@@ -97,16 +97,12 @@ function getPlayerEvaluationSortValue(player: PlayerEvaluation, sortField: SortF
     }
   }
 
-  if (sortField === 'score' || sortField === 'evaluation.score') {
-    return player.evaluation.score;
+  if (sortField === 'auctionPrice' || sortField === 'evaluation.auctionPrice') {
+    return player.evaluation.auctionPrice;
   }
 
-  if (sortField === 'tier' || sortField === 'evaluation.tier') {
-    return player.evaluation.tier;
-  }
-
-  if (sortField === 'confidence' || sortField === 'evaluation.confidence') {
-    return player.evaluation.confidence;
+  if (sortField === 'normalizedValue' || sortField === 'evaluation.normalizedValue') {
+    return player.evaluation.normalizedValue;
   }
 
   return undefined;
