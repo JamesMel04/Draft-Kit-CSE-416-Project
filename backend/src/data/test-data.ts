@@ -31,7 +31,7 @@ export const testPlayerDataSet: PlayerData[] = [
     id: 1,
     name: "PlayerName 1",
     team: "PlayerTeam 1",
-    positions: ["OF1"],
+    positions: ["OF", "U"],
     suggestedValue: 32,
     stats: {
       projection: {
@@ -52,7 +52,7 @@ export const testPlayerDataSet: PlayerData[] = [
     id: 2,
     name: "PlayerName 2",
     team: "PlayerTeam 2",
-    positions: ["OF1"],
+    positions: ["OF", "U"],
     suggestedValue: 32,
     stats: {
       projection: {
@@ -73,7 +73,7 @@ export const testPlayerDataSet: PlayerData[] = [
     id: 3,
     name: "PlayerName 3",
     team: "PlayerTeam 3",
-    positions: ["OF1"],
+    positions: ["OF", "U"],
     suggestedValue: 32,
     stats: {
       projection: {
@@ -94,7 +94,7 @@ export const testPlayerDataSet: PlayerData[] = [
     id: 4,
     name: "PlayerName 4",
     team: "PlayerTeam 4",
-    positions: ["OF1"],
+    positions: ["OF", "U"],
     suggestedValue: 32,
     stats: {
       projection: {

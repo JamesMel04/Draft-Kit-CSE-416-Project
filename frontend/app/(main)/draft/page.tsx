@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PlayerEvaluation, Position, DraftData, PlayerData, LeagueData } from '@/_lib/types';
+import { PlayerEvaluation, Position, RosterSlot, DraftData, PlayerData, LeagueData, Player } from '@/_lib/types';
 import { getPlayers, saveDraft } from '@/_lib/api';
 import { allPositions, allSearchFilterPositions } from '@/_lib/consts';
 import { getEvaluatedPlayers } from '@/_lib/api';
@@ -13,25 +13,11 @@ type CellRef = { team: TeamName; pos: Position };
 type PendingAction = { type: "move" | "swap"; source: CellRef } | null;
 type ViewMode = "hitters" | "pitchers" | "all";
 
-function normalizePlayerPosition(pos: string): string {
-  const upper = pos.toUpperCase();
-  if (["LF", "CF", "RF"].includes(upper)) return "OF";
-  return upper;
-}
-
-function isPitcherPosition(pos: string): boolean {
-  return ["SP", "RP", "P"].includes(normalizePlayerPosition(pos));
-}
-
-function canPlayerFitSlot(playerPositions: string[], slot: Position): boolean {
-  const normalized = playerPositions.map(normalizePlayerPosition);
-  const hasPitcherPosition = normalized.some(isPitcherPosition);
-  if (slot.startsWith("P")) return hasPitcherPosition;
-  if (slot.startsWith("OF")) return normalized.includes("OF");
-  if (slot === "CI") return normalized.includes("1B") || normalized.includes("3B");
-  if (slot === "MI") return normalized.includes("2B") || normalized.includes("SS");
-  if (slot === "UTIL") return !hasPitcherPosition;
-  return normalized.includes(slot);
+function canPlayerFitSlot(playerPositions: RosterSlot[], slot: Position): boolean {
+  if (slot.startsWith("P"))  return playerPositions.includes("P");
+  if (slot.startsWith("OF")) return playerPositions.includes("OF");
+  if (slot === "UTIL")       return playerPositions.includes("U");
+  return playerPositions.includes(slot as RosterSlot);
 }
 
 export default function Draft() {
@@ -60,13 +46,13 @@ export default function Draft() {
   // -------------------------
   // PLAYERS
   // -------------------------
-  const [players, setPlayers] = useState<PlayerData[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await getPlayers({});
-        setPlayers(res.players);
+        const res = (await getPlayers({})).players;
+        setPlayers([...res.hitters, ...res.pitchers].filter((p) => !p.isMinorLeaguer));
       } catch (e) {
         console.error("Failed to load players", e);
       }

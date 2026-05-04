@@ -25,7 +25,7 @@ export function convertPlayerToPlayerData(player: Player): PlayerData {
 		id: player.id,
 		name: player.name,
 		team: player.team,
-		positions: player.positions,
+		positions: player.fantasyPositions,
 		suggestedValue: player.suggestedValue,
 		stats: {
 			projection: convertSeasonStatsToPlayerStats(player.stats.projection),
