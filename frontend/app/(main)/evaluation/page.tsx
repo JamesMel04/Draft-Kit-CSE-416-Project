@@ -5,7 +5,7 @@ import { useUser } from '@auth0/nextjs-auth0/client';
 import { DraftEvaluation, PlayerEvaluation, DraftData } from '@/_lib/types';
 import { allSearchFilterPositions } from '@/_lib/consts';
 import { getEvaluatedDrafts, getSavedDrafts } from '@/_lib/api';
-import PlayerEvaluationPanel from '@/components/players/player_evaluation_panel';
+import PlayerEvaluationPanel, { PlayerEvaluationColumn } from '@/components/players/player_evaluation_panel';
 
 export default function Evaluation() {
     const { user } = useUser();
@@ -80,7 +80,7 @@ export default function Evaluation() {
         return [...playerResults].sort((a, b) => b.evaluation.normalizedValue - a.evaluation.normalizedValue)[0];
     }, [playerResults]);
 
-    const playerColumns = [
+    const playerColumns: PlayerEvaluationColumn[] = [
         {
             header: "Player",
             sortField: "name",

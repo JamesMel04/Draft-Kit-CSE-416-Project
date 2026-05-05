@@ -6,7 +6,7 @@ import { PlayerEvaluation, PlayerEvaluationQueryParams, Position, SortAsc, SortF
 import { getEvaluatedPlayers } from '@/_lib/api';
 import { sortEvaluatedPlayers } from '@/utils/sorters';
 
-type PlayerEvaluationColumn = {
+export type PlayerEvaluationColumn = {
   header: string;
   sortField?: SortField;
   renderCell: (player: PlayerEvaluation) => ReactNode;

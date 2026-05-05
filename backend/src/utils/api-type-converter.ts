@@ -1,4 +1,4 @@
-import { LeagueData, LeagueSettings, LeagueState, Player, PlayerData, PlayerEvaluation, PlayerPools, PlayerStats, PlayerValuation, Position, SearchFilterPosition, SeasonStats } from '../types';
+import { LeagueData, LeagueSettings, LeagueState, Player, PlayerData, PlayerEvaluation, PlayerPools, PlayerPosition, PlayerStats, PlayerValuation, RosterSlot, SearchFilterPosition, SeasonStats } from '../types';
 import { defaultRosterSlotsCounts } from '../consts';
 
 export function convertSeasonStatsToPlayerStats(seasonStats: SeasonStats): PlayerStats {
@@ -10,14 +10,59 @@ export function convertSeasonStatsToPlayerStats(seasonStats: SeasonStats): Playe
 	} else if (seasonStats.pitching) {
 		return {
 			seasons: seasonStats.seasons,
-			hitter: seasonStats.pitching as unknown as Record<string, number>
+			pitcher: seasonStats.pitching as unknown as Record<string, number>
 		};
 	}
-	
+
 	return {
-    seasons: seasonStats.seasons,
-    hitter: {}
-  };
+		seasons: seasonStats.seasons
+	};
+}
+
+export function mapPlayerPositionToFantasyPositions(position: PlayerPosition): RosterSlot[] {
+	switch (position) {
+		case 'C':
+			return ['C', 'U'];
+		case '1B':
+			return ['1B', 'CI', 'U'];
+		case '2B':
+			return ['2B', 'MI', 'U'];
+		case '3B':
+			return ['3B', 'CI', 'U'];
+		case 'SS':
+			return ['SS', 'MI', 'U'];
+		case 'LF':
+		case 'CF':
+		case 'RF':
+		case 'OF':
+			return ['OF', 'U'];
+		case 'DH':
+			return ['U'];
+		case 'P':
+			return ['P'];
+		case 'TWP':
+			return ['P', 'U'];
+		default: {
+			const exhaustiveCheck: never = position;
+			return exhaustiveCheck;
+		}
+	}
+}
+
+export function mapPlayerPositionsToFantasyPositions(positions: PlayerPosition[]): RosterSlot[] {
+	return Array.from(new Set(positions.flatMap(mapPlayerPositionToFantasyPositions)));
+}
+
+function getFantasyPositions(player: Player): RosterSlot[] {
+	if (player.fantasyPositions?.length) {
+		return player.fantasyPositions;
+	}
+
+	if (player.mlbPositions?.length) {
+		return mapPlayerPositionsToFantasyPositions(player.mlbPositions);
+	}
+
+	return mapPlayerPositionToFantasyPositions(player.position);
 }
 
 export function convertPlayerToPlayerData(player: Player): PlayerData {
@@ -25,7 +70,7 @@ export function convertPlayerToPlayerData(player: Player): PlayerData {
 		id: player.id,
 		name: player.name,
 		team: player.team,
-		positions: player.fantasyPositions,
+		positions: getFantasyPositions(player),
 		suggestedValue: player.suggestedValue,
 		stats: {
 			projection: convertSeasonStatsToPlayerStats(player.stats.projection),
@@ -74,6 +119,7 @@ export function convertPlayerValuationToEvaluation(player: PlayerData, valuation
 		name: player.name,
 		team: player.team,
 		positions: player.positions,
+		suggestedValue: player.suggestedValue,
 		evaluation: {
         normalizedValue: valuation.normalizedValue,
         auctionPrice: valuation.auctionPrice
@@ -81,16 +127,14 @@ export function convertPlayerValuationToEvaluation(player: PlayerData, valuation
 	};
 }
 
-export function positionToFilterPosition(pos: Position): SearchFilterPosition {
+export function positionToFilterPosition(pos: RosterSlot): SearchFilterPosition {
     if (["C"].includes(pos)) return "C";
     if (["1B"].includes(pos)) return "1B";
     if (["2B"].includes(pos)) return "2B";
     if (["3B"].includes(pos)) return "3B";
     if (["SS"].includes(pos)) return "SS";
-    if (["CI"].includes(pos)) return "OF";
-    if (["MI"].includes(pos)) return "OF";
-    if (["OF1", "OF2", "OF3", "OF4", "OF5"].includes(pos)) return "OF";
-    if (["UTIL"].includes(pos)) return "UTIL";
-    if (["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9"].includes(pos)) return "P";
+    if (["OF"].includes(pos)) return "OF";
+    if (["U", "CI", "MI"].includes(pos)) return "UTIL";
+    if (["P"].includes(pos)) return "P";
     return pos as SearchFilterPosition;
 }

@@ -48,10 +48,11 @@ function getPlayerDataSortValue(player: PlayerData, sortField: SortField): SortV
     }
   }
 
-  if (Object.prototype.hasOwnProperty.call(player.stats.projection.hitter, sortField)) {
-    const hitterValue = player.stats.projection.hitter[sortField];
-    if (typeof hitterValue === 'number') {
-      return hitterValue;
+  const statBag = player.stats.projection.hitter ?? player.stats.projection.pitcher;
+  if (statBag && Object.prototype.hasOwnProperty.call(statBag, sortField)) {
+    const statValue = statBag[sortField];
+    if (typeof statValue === 'number') {
+      return statValue;
     }
   }
 

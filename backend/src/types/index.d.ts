@@ -41,7 +41,8 @@ export type SearchFilterPosition =
 
 export type PlayerStats = {
   seasons: number[];
-  hitter: Record<string, number>;
+  hitter?: Record<string, number>;
+  pitcher?: Record<string, number>;
 };
 
 export type PlayerData = {
@@ -226,7 +227,6 @@ export interface Player {
     name: string;
     team: string;
     teamId: number;
-    position: string;
     age: number;
     position: PlayerPosition; // Specific designated position. Mostly used to check for "TWP".
     mlbPositions: PlayerPosition[]; // List of eligilbe positions
@@ -258,9 +258,6 @@ export interface PitcherPlayer extends Player {
 }
 
 // ===================== API REQUEST TYPES ======================
-export type RosterSlot = typeof ROSTER_SLOTS[number];
-export type RosterSlotCounts = Record<RosterSlot, number>;
-
 export interface LeagueSettings {
     budget: number;
     teamCount: number;

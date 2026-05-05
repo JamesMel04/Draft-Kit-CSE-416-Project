@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { getPlayers } from "@/_lib/api";
 import { allPositions } from "@/_lib/consts";
-import { LeagueData, PlayerData, PlayerID, Position } from "@/_lib/types";
+import { LeagueData, Player, PlayerID, Position } from "@/_lib/types";
 
 type TeamState = {
   name: string;
-  roster: Partial<Record<Position, PlayerData>>;
+  roster: Partial<Record<Position, Player>>;
 };
 
 export default function LeagueConfigPage() {
@@ -27,7 +27,7 @@ export default function LeagueConfigPage() {
   const [taxiRosterSlots, setTaxiRosterSlots] = useState(4);
   const [taxiDraftOrder, setTaxiDraftOrder] = useState<number[]>([0, 1]);
 
-  const [players, setPlayers] = useState<PlayerData[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(false);
   const [playerSearch, setPlayerSearch] = useState("");
   const [assignTeamByPlayer, setAssignTeamByPlayer] = useState<Record<string, number>>({});
@@ -50,7 +50,9 @@ export default function LeagueConfigPage() {
       try {
         setLoading(true);
         const res = await getPlayers({});
-        setPlayers(res.players);
+        setPlayers(
+          [...res.players.hitters, ...res.players.pitchers].filter((player) => !player.isMinorLeaguer)
+        );
       } catch (e) {
         console.error("Failed to load players", e);
       } finally {
@@ -163,7 +165,7 @@ export default function LeagueConfigPage() {
     setAssignPosByPlayer((prev) => ({ ...prev, [playerId]: pos }));
   }, []);
 
-  const handleAssign = useCallback((player: PlayerData) => {
+  const handleAssign = useCallback((player: Player) => {
     setTeams((prev) => {
       const teamIndex = assignTeamByPlayer[player.id] ?? 0;
       const currentTeam = prev[teamIndex];
