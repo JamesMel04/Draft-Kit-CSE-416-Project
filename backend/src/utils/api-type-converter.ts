@@ -1,5 +1,19 @@
 import { LeagueData, LeagueSettings, LeagueState, Player, PlayerData, PlayerEvaluation, PlayerPools, PlayerPosition, PlayerStats, PlayerValuation, RosterSlot, SearchFilterPosition, SeasonStats } from '../types';
-import { defaultRosterSlotsCounts } from '../consts';
+import { defaultRosterSlotsCounts, ROSTER_SLOTS } from '../consts';
+
+const rosterSlotSet = new Set<string>(ROSTER_SLOTS);
+
+function normalizeToArray<T>(value: T | T[] | undefined | null): T[] {
+	if (Array.isArray(value)) {
+		return value;
+	}
+
+	return value === undefined || value === null ? [] : [value];
+}
+
+function isRosterSlot(position: unknown): position is RosterSlot {
+	return typeof position === 'string' && rosterSlotSet.has(position);
+}
 
 export function convertSeasonStatsToPlayerStats(seasonStats: SeasonStats): PlayerStats {
 	if (seasonStats.hitting) {
@@ -19,7 +33,7 @@ export function convertSeasonStatsToPlayerStats(seasonStats: SeasonStats): Playe
 	};
 }
 
-export function mapPlayerPositionToFantasyPositions(position: PlayerPosition): RosterSlot[] {
+export function mapPlayerPositionToFantasyPositions(position: PlayerPosition | string): RosterSlot[] {
 	switch (position) {
 		case 'C':
 			return ['C', 'U'];
@@ -42,24 +56,26 @@ export function mapPlayerPositionToFantasyPositions(position: PlayerPosition): R
 			return ['P'];
 		case 'TWP':
 			return ['P', 'U'];
-		default: {
-			const exhaustiveCheck: never = position;
-			return exhaustiveCheck;
-		}
+		case 'IF':
+			return ['CI', 'MI', 'U'];
+		default:
+			return ['U'];
 	}
 }
 
-export function mapPlayerPositionsToFantasyPositions(positions: PlayerPosition[]): RosterSlot[] {
+export function mapPlayerPositionsToFantasyPositions(positions: (PlayerPosition | string)[]): RosterSlot[] {
 	return Array.from(new Set(positions.flatMap(mapPlayerPositionToFantasyPositions)));
 }
 
 function getFantasyPositions(player: Player): RosterSlot[] {
-	if (player.fantasyPositions?.length) {
-		return player.fantasyPositions;
+	const fantasyPositions = normalizeToArray(player.fantasyPositions).filter(isRosterSlot);
+	if (fantasyPositions.length) {
+		return fantasyPositions;
 	}
 
-	if (player.mlbPositions?.length) {
-		return mapPlayerPositionsToFantasyPositions(player.mlbPositions);
+	const mlbPositions = normalizeToArray<PlayerPosition | string>(player.mlbPositions);
+	if (mlbPositions.length) {
+		return mapPlayerPositionsToFantasyPositions(mlbPositions);
 	}
 
 	return mapPlayerPositionToFantasyPositions(player.position);
