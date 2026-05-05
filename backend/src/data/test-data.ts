@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { PlayerData, DraftData, LeagueData } from '../types';
 import { getPlayers } from '../utils/api';
+import { convertPlayerPoolsToPlayerData } from '../utils/api-type-converter';
 
 // Path where fetched player JSON will be written for later inspection.
 const playersJsonPath = path.join(__dirname, 'players.json');
@@ -44,7 +45,7 @@ export let testLeague: LeagueData | undefined;
 
 export async function initTestData(): Promise<void> {
   try {
-    const { hitters, pitchers } = await getPlayers();
+    const { hitters, pitchers } = convertPlayerPoolsToPlayerData(await getPlayers());
     const combined: PlayerData[] = [...hitters, ...pitchers];
 
     // Write fetched players to players.json for debugging/inspection.

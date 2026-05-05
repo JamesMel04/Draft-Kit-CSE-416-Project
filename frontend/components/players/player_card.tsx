@@ -61,22 +61,27 @@ function PlayerStatsTable({player} : {player : PlayerData}) {
         return seasons.join(", ");
     };
 
-    // Get all stat names from the hitter objects
+    // Pull whichever stat bag (hitter or pitcher) is populated for a given season block.
+    const getStatBag = (block: PlayerData["stats"]["projection"]): Record<string, number> | undefined => {
+        return block.hitter ?? block.pitcher;
+    };
+
     const getAllStatNames = () => {
         const statNames = new Set<string>();
-        if (player.stats.projection.hitter) {
-            Object.keys(player.stats.projection.hitter).forEach(stat => statNames.add(stat));
-        }
-        if (player.stats.lastYear.hitter) {
-            Object.keys(player.stats.lastYear.hitter).forEach(stat => statNames.add(stat));
-        }
-        if (player.stats.threeYearAvg.hitter) {
-            Object.keys(player.stats.threeYearAvg.hitter).forEach(stat => statNames.add(stat));
-        }
+        const blocks = [player.stats.projection, player.stats.lastYear, player.stats.threeYearAvg];
+        blocks.forEach((block) => {
+            const bag = getStatBag(block);
+            if (bag) {
+                Object.keys(bag).forEach(stat => statNames.add(stat));
+            }
+        });
         return Array.from(statNames);
     };
 
     const statNames = getAllStatNames();
+    const projectionStats = getStatBag(player.stats.projection);
+    const lastYearStats = getStatBag(player.stats.lastYear);
+    const threeYearAvgStats = getStatBag(player.stats.threeYearAvg);
 
     return(
         <div className="w-full bg-emerald-600 rounded-lg border border-zinc-800 overflow-hidden">
@@ -101,13 +106,13 @@ function PlayerStatsTable({player} : {player : PlayerData}) {
                             <tr key={stat} className="border-b border-emerald-400 last:border-b-0">
                                 <td className="font-extrabold bg-emerald-300" style={bodyCellStyle}>{stat}</td>
                                 <td className="text-center" style={bodyCellStyle}>
-                                    {player.stats.projection.hitter?.[stat] !== undefined ? player.stats.projection.hitter[stat] : "N/A"}
+                                    {projectionStats?.[stat] !== undefined ? projectionStats[stat] : "N/A"}
                                 </td>
                                 <td className="text-center" style={bodyCellStyle}>
-                                    {player.stats.lastYear.hitter?.[stat] !== undefined ? player.stats.lastYear.hitter[stat] : "N/A"}
+                                    {lastYearStats?.[stat] !== undefined ? lastYearStats[stat] : "N/A"}
                                 </td>
                                 <td className="text-center" style={bodyCellStyle}>
-                                    {player.stats.threeYearAvg.hitter?.[stat] !== undefined ? player.stats.threeYearAvg.hitter[stat] : "N/A"}
+                                    {threeYearAvgStats?.[stat] !== undefined ? threeYearAvgStats[stat] : "N/A"}
                                 </td>
                             </tr>
                         ))

@@ -96,7 +96,8 @@ export type SearchFilterPosition = "C" | "1B" | "2B" | "3B" | "SS" | "OF" | "P" 
 
 export type PlayerStats = {
   seasons: number[];
-  hitter: Record<string, number>;
+  hitter?: Record<string, number>;
+  pitcher?: Record<string, number>;
 };
 
 /** Stats Data */
@@ -153,7 +154,16 @@ export const PITCHER_STAT_KEYS : (keyof PitcherStats)[] = [
 /** Types for sorting by pitcher or hitter stats */
 export type SortParamHitter = keyof HitterStats | "name" | "team" | "positions";
 export type SortParamPitcher = keyof PitcherStats | "name" | "team" | "positions";
-export type SortField = SortParamHitter | SortParamPitcher;
+export type SortParamEvaluation =
+  | "name"
+  | "team"
+  | "positions"
+  | "suggestedValue"
+  | "auctionPrice"
+  | "evaluation.auctionPrice"
+  | "normalizedValue"
+  | "evaluation.normalizedValue";
+export type SortField = SortParamHitter | SortParamPitcher | SortParamEvaluation;
 export type SortAsc = boolean;
 
 /** Season stats, storing the seasons as well as the type of stat, hitting or pitching */
