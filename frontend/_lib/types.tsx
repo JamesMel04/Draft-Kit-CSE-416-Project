@@ -265,7 +265,7 @@ export type TaxiDraftConfig = {
   rosterSlots: number;
   eligiblePlayerType: "minor-leaguers";
   draftOrder: TeamName[];
-  rosters: Record<TeamName, PlayerID[]>;
+  rosters: Record<TeamName, (PlayerID | null)[]>;
 };
 
 export type DraftData = {
