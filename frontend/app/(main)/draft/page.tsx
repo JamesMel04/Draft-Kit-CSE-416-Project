@@ -12,6 +12,7 @@ type CellRef = { team: TeamName; pos: Position };
 type PendingAction = { type: "move" | "swap"; source: CellRef } | null;
 type ViewMode = "hitters" | "pitchers" | "all";
 type DraftView = "main" | "taxi";
+type TaxiRosterSlot = PlayerID | null;
 
 function canPlayerFitSlot(playerPositions: RosterSlot[], slot: Position): boolean {
   if (slot.startsWith("P"))  return playerPositions.includes("P");
@@ -179,48 +180,52 @@ export default function Draft() {
   const [assignSlotByPlayer, setAssignSlotByPlayer] = useState<Partial<Record<string, Position>>>({});
   const [filterTakenPlayers, setFilterTakenPlayers] = useState(true);
   const [draftView, setDraftView] = useState<DraftView>("main");
-  const [taxiRosters, setTaxiRosters] = useState<Record<TeamName, PlayerID[]>>({});
-  const [taxiPickIndex, setTaxiPickIndex] = useState(0);
-  const [filterTaxiTakenPlayers, setFilterTaxiTakenPlayers] = useState(true);
+  const [taxiRosters, setTaxiRosters] = useState<Record<TeamName, TaxiRosterSlot[]>>({});
   const [taxiSearch, setTaxiSearch] = useState("");
+  const [taxiAssignTeamByPlayer, setTaxiAssignTeamByPlayer] = useState<Partial<Record<string, TeamName>>>({});
+  const [taxiAssignSlotByPlayer, setTaxiAssignSlotByPlayer] = useState<Partial<Record<string, number>>>({});
 
   const taxiConfig = config?.taxiDraft;
   const taxiEnabled = Boolean(taxiConfig?.enabled && taxiConfig.rosterSlots > 0);
   const taxiRosterSlots = taxiConfig?.rosterSlots ?? 0;
 
-  // Taxi Order
-  const taxiDraftOrder = useMemo(() => {
-    if (!taxiEnabled) return [];
-    const configuredOrder = taxiConfig?.draftOrder?.filter((team) => teams.includes(team)) ?? [];
-    return configuredOrder.length ? configuredOrder : teams;
-  }, [taxiConfig?.draftOrder, taxiEnabled, teams]);
+  // keets taxi array shaped, [null, null, 111, null, ...]
+  const normalizeTaxiRoster = useCallback((roster: TaxiRosterSlot[] = []) => {
+    return Array.from({ length: taxiRosterSlots }, (_, index) => roster[index] ?? null);
+  }, [taxiRosterSlots]);
+
+  const getFirstOpenTaxiSlot = useCallback((team: TeamName, rosters = taxiRosters) => {
+    const roster = rosters[team] ?? [];
+    return Array.from({ length: taxiRosterSlots }).findIndex((_, index) => !roster[index]);
+  }, [taxiRosterSlots, taxiRosters]);
 
   // runs whenever taxi draft config changes
   useEffect(() => {
     if (!taxiEnabled) {
       setDraftView("main");
       setTaxiRosters({});
-      setTaxiPickIndex(0);
+      setTaxiAssignTeamByPlayer({});
+      setTaxiAssignSlotByPlayer({});
       return;
     }
 
     // prepares data that the taxi table uses
     // preserve user picks
     setTaxiRosters((prev) => {
-      const next: Record<TeamName, PlayerID[]> = {};
+      const next: Record<TeamName, TaxiRosterSlot[]> = {};
       teams.forEach((team) => {
         const existingRoster = prev[team] ?? [];
-        if (existingRoster.length) {
-          next[team] = existingRoster.slice(0, taxiRosterSlots);
+        if (existingRoster.some(Boolean)) {
+          next[team] = normalizeTaxiRoster(existingRoster);
           return;
         }
 
         const storedPlayerIds = taxiConfig?.rosters?.[team] ?? [];
-        next[team] = storedPlayerIds.slice(0, taxiRosterSlots);
+        next[team] = normalizeTaxiRoster(storedPlayerIds);
       });
       return next;
     });
-  }, [taxiConfig?.rosters, taxiEnabled, taxiRosterSlots, teams]);
+  }, [normalizeTaxiRoster, taxiConfig?.rosters, taxiEnabled, teams]);
 
   // -------------------------
   // ROSTER HELPERS
@@ -316,21 +321,26 @@ export default function Draft() {
   const taxiTakenPlayerIds = useMemo(() => {
     const taken = new Set<PlayerID>();
     Object.values(taxiRosters).forEach((teamRoster) => {
-      teamRoster.forEach((playerId) => taken.add(playerId));
+      teamRoster.forEach((playerId) => {
+        if (playerId) taken.add(playerId);
+      });
     });
     return taken;
   }, [taxiRosters]);
 
   // Filled taxi slots across all teams
   const taxiFilledSlots = useMemo(() => {
-    return teams.reduce((total, team) => total + (taxiRosters[team]?.length ?? 0), 0);
+    return teams.reduce(
+      (total, team) => total + (taxiRosters[team]?.filter(Boolean).length ?? 0),
+      0
+    );
   }, [taxiRosters, teams]);
 
   // Shows only visible players for Taxi
   const visibleTaxiEligiblePlayers = useMemo(() => {
     const q = taxiSearch.trim().toLowerCase();
     return taxiEligiblePlayers.filter((player) => {
-      if (filterTaxiTakenPlayers && taxiTakenPlayerIds.has(player.id)) {
+      if (taxiTakenPlayerIds.has(player.id)) {
         return false;
       }
 
@@ -340,29 +350,13 @@ export default function Draft() {
 
       return player.name.toLowerCase().includes(q) || Boolean(player.team?.toLowerCase().includes(q));
     });
-  }, [filterTaxiTakenPlayers, taxiEligiblePlayers, taxiSearch, taxiTakenPlayerIds]);
+  }, [taxiEligiblePlayers, taxiSearch, taxiTakenPlayerIds]);
 
   const taxiTotalSlots = taxiEnabled ? teams.length * taxiRosterSlots : 0;
   const taxiComplete = taxiEnabled && taxiTotalSlots > 0 && taxiFilledSlots >= taxiTotalSlots;
-  const currentTaxiTeam = taxiEnabled && taxiDraftOrder.length
-    ? taxiDraftOrder[taxiPickIndex % taxiDraftOrder.length]
-    : undefined;
-
-
-  // Controls who gets to pick next
-  const getNextTaxiPickIndex = useCallback((rosters: Record<TeamName, PlayerID[]>, startIndex: number) => {
-    if (!taxiEnabled || !taxiDraftOrder.length) return 0;
-
-    for (let offset = 0; offset < taxiDraftOrder.length; offset += 1) {
-      const nextIndex = (startIndex + offset) % taxiDraftOrder.length;
-      const team = taxiDraftOrder[nextIndex];
-      if ((rosters[team]?.length ?? 0) < taxiRosterSlots) {
-        return nextIndex;
-      }
-    }
-
-    return startIndex % taxiDraftOrder.length;
-  }, [taxiDraftOrder, taxiEnabled, taxiRosterSlots]);
+  const firstOpenTaxiTeam = useMemo(() => {
+    return teams.find((team) => getFirstOpenTaxiSlot(team) !== -1);
+  }, [getFirstOpenTaxiSlot, teams]);
 
   const getOpenCompatibleSlots = useCallback((team: TeamName, player: PlayerEvaluation): Position[] => {
     return allPositions.filter(
@@ -399,7 +393,8 @@ export default function Draft() {
 
   // runs when click on "Draft" on a taxi eligible player
   const handleTaxiDraftPlayer = useCallback((player: Player) => {
-    if (!taxiEnabled || !currentTaxiTeam) {
+    const targetTeam = taxiAssignTeamByPlayer[player.id] ?? firstOpenTaxiTeam;
+    if (!taxiEnabled || !targetTeam) {
       window.alert("Taxi draft is not available for this league.");
       return;
     }
@@ -413,45 +408,63 @@ export default function Draft() {
         return prev;
       }
 
-      const currentRoster = prev[currentTaxiTeam] ?? [];
-      if (currentRoster.length >= taxiRosterSlots) {
-        window.alert(`${currentTaxiTeam}'s taxi roster is full.`);
+      const currentRoster = normalizeTaxiRoster(prev[targetTeam] ?? []);
+      const requestedSlot = taxiAssignSlotByPlayer[player.id];
+      const targetSlotIndex =
+        requestedSlot !== undefined && !currentRoster[requestedSlot]
+          ? requestedSlot
+          : currentRoster.findIndex((playerId) => !playerId);
+
+      if (targetSlotIndex === -1) {
+        window.alert(`${targetTeam}'s taxi roster is full.`);
         return prev;
       }
 
-      const next = {
+      const nextRoster = [...currentRoster];
+      nextRoster[targetSlotIndex] = player.id;
+      return {
         ...prev,
-        [currentTaxiTeam]: [...currentRoster, player.id],
+        [targetTeam]: nextRoster,
       };
-      setTaxiPickIndex(getNextTaxiPickIndex(next, taxiPickIndex + 1));
-      return next;
     });
-  }, [currentTaxiTeam, getNextTaxiPickIndex, taxiEnabled, taxiPickIndex, taxiRosterSlots]);
+  }, [firstOpenTaxiTeam, normalizeTaxiRoster, taxiAssignSlotByPlayer, taxiAssignTeamByPlayer, taxiEnabled]);
 
-  const handleRemoveTaxiPlayer = useCallback((team: TeamName, playerId: PlayerID) => {
+  const handleRemoveTaxiPlayer = useCallback((team: TeamName, slotIndex: number) => {
     setTaxiRosters((prev) => ({
       ...prev,
-      [team]: (prev[team] ?? []).filter((rosteredPlayerId) => rosteredPlayerId !== playerId),
+      [team]: normalizeTaxiRoster(prev[team] ?? []).map((playerId, index) =>
+        index === slotIndex ? null : playerId
+      ),
     }));
-  }, []);
+  }, [normalizeTaxiRoster]);
 
-  const handleMoveTaxiPlayer = useCallback((fromTeam: TeamName, toTeam: TeamName, playerId: PlayerID) => {
+  const handleMoveTaxiPlayer = useCallback((fromTeam: TeamName, toTeam: TeamName, fromSlotIndex: number) => {
     if (fromTeam === toTeam) return;
 
     setTaxiRosters((prev) => {
-      const targetRoster = prev[toTeam] ?? [];
-      if (targetRoster.length >= taxiRosterSlots) {
+      const sourceRoster = normalizeTaxiRoster(prev[fromTeam] ?? []);
+      const playerId = sourceRoster[fromSlotIndex];
+      if (!playerId) return prev;
+
+      const targetRoster = normalizeTaxiRoster(prev[toTeam] ?? []);
+      const targetSlotIndex = targetRoster.findIndex((rosteredPlayerId) => !rosteredPlayerId);
+      if (targetSlotIndex === -1) {
         window.alert(`${toTeam}'s taxi roster is full.`);
         return prev;
       }
 
+      const nextSourceRoster = [...sourceRoster];
+      const nextTargetRoster = [...targetRoster];
+      nextSourceRoster[fromSlotIndex] = null;
+      nextTargetRoster[targetSlotIndex] = playerId;
+
       return {
         ...prev,
-        [fromTeam]: (prev[fromTeam] ?? []).filter((rosteredPlayerId) => rosteredPlayerId !== playerId),
-        [toTeam]: [...targetRoster, playerId],
+        [fromTeam]: nextSourceRoster,
+        [toTeam]: nextTargetRoster,
       };
     });
-  }, [taxiRosterSlots]);
+  }, [normalizeTaxiRoster]);
 
   useEffect(() => {
     if (!taxiEnabled || !config?.taxiDraft) return;
@@ -882,8 +895,8 @@ export default function Draft() {
               </div>
               <div className="grid gap-2 sm:grid-cols-3">
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">On Clock</div>
-                  <div className="text-sm font-bold text-slate-900">{taxiComplete ? "Complete" : currentTaxiTeam ?? "-"}</div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Entry Mode</div>
+                  <div className="text-sm font-bold text-slate-900">{taxiComplete ? "Complete" : "Any team"}</div>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                   <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Slots</div>
@@ -909,22 +922,14 @@ export default function Draft() {
               style={{ gridTemplateColumns: `88px repeat(${teams.length}, minmax(210px, 1fr))` }}
             >
               <div className="border-b border-r bg-slate-100 p-2" />
-              {teams.map((team) => {
-                const isCurrent = currentTaxiTeam === team && !taxiComplete;
-                return (
-                  <div
-                    key={team}
-                    className={`border-b border-r p-3 text-center ${
-                      isCurrent ? "bg-emerald-50 ring-2 ring-inset ring-emerald-500" : "bg-slate-100"
-                    }`}
-                  >
-                    <div className="text-lg font-bold tracking-tight text-slate-900">{team}</div>
-                    <div className="mt-1 text-xs font-semibold text-slate-500">
-                      {(taxiRosters[team]?.length ?? 0)}/{taxiRosterSlots} taxi slots
-                    </div>
+              {teams.map((team) => (
+                <div key={team} className="border-b border-r bg-slate-100 p-3 text-center">
+                  <div className="text-lg font-bold tracking-tight text-slate-900">{team}</div>
+                  <div className="mt-1 text-xs font-semibold text-slate-500">
+                    {taxiRosters[team]?.filter(Boolean).length ?? 0}/{taxiRosterSlots} taxi slots
                   </div>
-                );
-              })}
+                </div>
+              ))}
 
               {Array.from({ length: taxiRosterSlots }).map((_, slotIndex) => (
                 <div key={`taxi-slot-${slotIndex}`} className="contents">
@@ -947,7 +952,7 @@ export default function Draft() {
                             <div className="flex flex-wrap items-center gap-2">
                               <select
                                 value={team}
-                                onChange={(e) => handleMoveTaxiPlayer(team, e.target.value, playerId)}
+                                onChange={(e) => handleMoveTaxiPlayer(team, e.target.value, slotIndex)}
                                 className="rounded-md border border-slate-300 px-2 py-1 text-xs"
                               >
                                 {teams.map((targetTeam) => (
@@ -958,7 +963,7 @@ export default function Draft() {
                               </select>
                               <button
                                 type="button"
-                                onClick={() => handleRemoveTaxiPlayer(team, playerId)}
+                                onClick={() => handleRemoveTaxiPlayer(team, slotIndex)}
                                 className="rounded-md border border-rose-300 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50"
                               >
                                 Remove
@@ -977,21 +982,12 @@ export default function Draft() {
           </div>
 
           <div className="space-y-2">
-            <label className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filterTaxiTakenPlayers}
-                onChange={(e) => setFilterTaxiTakenPlayers(e.target.checked)}
-              />
-              Hide taxi-rostered players
-            </label>
-
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900">Taxi Eligible Players</h2>
                   <p className="mt-1 text-xs text-slate-500">
-                    {currentTaxiTeam ? `${currentTaxiTeam} is on the clock.` : "Minor-league eligible player pool."}
+                    Add any eligible minor leaguer to any team with an open taxi slot.
                   </p>
                 </div>
                 <div className="text-xs font-semibold text-slate-500">
@@ -1012,22 +1008,71 @@ export default function Draft() {
                     <tr>
                       <th className="px-3 py-2 text-left font-bold">Player</th>
                       <th className="px-3 py-2 text-left font-bold">Team</th>
+                      <th className="px-3 py-2 text-left font-bold">Taxi Team</th>
+                      <th className="px-3 py-2 text-left font-bold">Taxi Slot</th>
                       <th className="px-3 py-2 text-left font-bold">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {!playersLoaded ? (
                       <tr>
-                        <td className="px-3 py-3 text-slate-500" colSpan={3}>Loading taxi-eligible players...</td>
+                        <td className="px-3 py-3 text-slate-500" colSpan={5}>Loading taxi-eligible players...</td>
                       </tr>
                     ) : visibleTaxiEligiblePlayers.length ? (
                       visibleTaxiEligiblePlayers.map((player) => {
                         const isTaken = taxiTakenPlayerIds.has(player.id);
-                        const isDisabled = !currentTaxiTeam || taxiComplete || isTaken;
+                        const selectedTeam = taxiAssignTeamByPlayer[player.id] ?? firstOpenTaxiTeam ?? teams[0];
+                        const firstOpenSlot = selectedTeam ? getFirstOpenTaxiSlot(selectedTeam) : -1;
+                        const selectedSlot = taxiAssignSlotByPlayer[player.id] ?? firstOpenSlot;
+                        const selectedSlotTaken = selectedTeam && selectedSlot >= 0 ? Boolean(taxiRosters[selectedTeam]?.[selectedSlot]) : true;
+                        const selectedTeamFull = firstOpenSlot === -1;
+                        const isDisabled = !selectedTeam || selectedSlot < 0 || taxiComplete || isTaken || selectedSlotTaken;
                         return (
                           <tr key={player.id} className="border-t border-slate-200 hover:bg-slate-50">
                             <td className="px-3 py-2 font-semibold text-slate-900">{player.name}</td>
                             <td className="px-3 py-2 text-slate-600">{player.team || "-"}</td>
+                            <td className="px-3 py-2">
+                              <select
+                                value={selectedTeam ?? ""}
+                                onChange={(e) => {
+                                  const nextTeam = e.target.value;
+                                  setTaxiAssignTeamByPlayer((prev) => ({ ...prev, [player.id]: nextTeam }));
+                                  setTaxiAssignSlotByPlayer((prev) => ({ ...prev, [player.id]: getFirstOpenTaxiSlot(nextTeam) }));
+                                }}
+                                className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                disabled={taxiComplete}
+                              >
+                                {teams.map((team) => {
+                                  const teamFull = getFirstOpenTaxiSlot(team) === -1;
+                                  return (
+                                    <option key={`${player.id}-${team}`} value={team} disabled={teamFull}>
+                                      {team}{teamFull ? " (full)" : ""}
+                                    </option>
+                                  );
+                                })}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2">
+                              <select
+                                value={selectedSlot >= 0 ? selectedSlot : ""}
+                                onChange={(e) => setTaxiAssignSlotByPlayer((prev) => ({ ...prev, [player.id]: Number(e.target.value) }))}
+                                className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                                disabled={!selectedTeam || selectedTeamFull || taxiComplete}
+                              >
+                                {selectedTeamFull ? (
+                                  <option value="">Full</option>
+                                ) : (
+                                  Array.from({ length: taxiRosterSlots }).map((_, slotIndex) => {
+                                    const slotTaken = Boolean(taxiRosters[selectedTeam]?.[slotIndex]);
+                                    return (
+                                      <option key={`${player.id}-${selectedTeam}-T${slotIndex + 1}`} value={slotIndex} disabled={slotTaken}>
+                                        T{slotIndex + 1}{slotTaken ? " (filled)" : ""}
+                                      </option>
+                                    );
+                                  })
+                                )}
+                              </select>
+                            </td>
                             <td className="px-3 py-2">
                               <button
                                 type="button"
@@ -1039,7 +1084,7 @@ export default function Draft() {
                                     : "bg-emerald-600 text-white hover:bg-emerald-700"
                                 }`}
                               >
-                                {isTaken ? "Rostered" : taxiComplete ? "Full" : "Draft"}
+                                {isTaken ? "Rostered" : taxiComplete || selectedTeamFull ? "Full" : "Add"}
                               </button>
                             </td>
                           </tr>
@@ -1047,7 +1092,7 @@ export default function Draft() {
                       })
                     ) : (
                       <tr>
-                        <td className="px-3 py-3 text-slate-500" colSpan={3}>No taxi-eligible players for current filters.</td>
+                        <td className="px-3 py-3 text-slate-500" colSpan={5}>No taxi-eligible players for current filters.</td>
                       </tr>
                     )}
                   </tbody>
