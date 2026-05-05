@@ -145,3 +145,6 @@ vite.config.ts.timestamp-*
 
 # Notes
 Notes
+
+# Generated player data (rewritten by backend on startup, local debug only)
+backend/src/data/players.json
