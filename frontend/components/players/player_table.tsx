@@ -28,7 +28,7 @@ export default function PlayerTable({ players }  : {players : PlayerPools | null
           className={`px-5 py-2 text-sm font-semibold capitalize transition-colors
             ${tab === keyLabel.key
               ? "border-b-2 border-blue-400 text-blue-400"
-              : "text-zinc-400 hover:text-white"
+              : "text-zinc-500 hover:text-blue-500"
             }`}
         >
           {keyLabel.label}
@@ -127,9 +127,7 @@ function PitchersTable({ players } : {players : PitcherPlayer[]}) {
               <td className={bodyCellClass}>
                 {player.team}
               </td>
-              <td className={bodyCellClass}>
-                {player.mlbPositions?.join(", ") || "-"}
-              </td>
+              <td className={bodyCellClass}>{player.position}</td>
 
               {statColumns.map((statName) => (
                 <td key={`${player.id}-${statName}`} className={bodyCellClass}>
