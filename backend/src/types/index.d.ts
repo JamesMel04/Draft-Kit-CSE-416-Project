@@ -284,3 +284,10 @@ export interface PlayerValuation {
     normalizedValue: number;
     auctionPrice: number;
 }
+
+// Type for notifications POSTed by API to backend
+export interface APINotification {
+  playerName: string,
+  transactionType: string,
+  description: string,
+}
