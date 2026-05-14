@@ -5,21 +5,21 @@
  *  Method to reset the unread notifications to 0
  * I did it this way because it prevents having to rewrite the eventSource logic since I want two separate views for notifications
  */
-
+"use client"
 import { BACKEND_URL } from "@/_lib/consts";
 import { APINotification } from "@/_lib/types";
 import { useEffect, useState } from "react";
-import { NotificationContext } from "../contexts";
+import { NotificationContext } from "./contexts";
 
 
-export default function Notification({ children } : { children : never }) {
+export default function Notification({ children } : { children : React.ReactNode }) {
     const [notifications, setNotifications] = useState<APINotification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
     // UseEffect to set the eventSource to the backend GET URL
     useEffect(() => {
         // Create an EventSource to listen to SSE events
-        const eventSource = new EventSource(`${BACKEND_URL}`);
+        const eventSource = new EventSource(`${BACKEND_URL}/notifications`);
         // Handle incoming messages
         eventSource.onmessage = (event) => {
             const data : APINotification = JSON.parse(event.data);

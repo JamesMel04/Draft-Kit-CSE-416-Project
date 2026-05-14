@@ -1,7 +1,4 @@
 import { Router, Request, Response } from 'express';
-import { HitterPlayer, PitcherPlayer, Player, PlayerData, PlayerID, PlayerPools } from '../types';
-import { getPlayers } from '../utils/api';
-import { defaultMaxListeners } from 'node:events';
 import { APINotification } from '../types/index';
 
 const router = Router();
@@ -33,7 +30,11 @@ router.get('/', async (req, res) => {
  */
 router.post('/', (req, res) => {
     const notif : APINotification = req.body;
-    
+
+    // Send OK notificaion before looping through clients for efficiency.
+    // In case there's a lot of clients
+    res.status(200).send();
+
     // Iterate and write to each client
     // Not sending, as that closes the connection
     // The \n\n is needed for the EventSource listener to know it's the end of an event
