@@ -343,3 +343,10 @@ export type DraftEvaluationResponse = {
 export type SavedDraftsResponse = {
   drafts: DraftData[];
 };
+
+// Type for notifications POSTed by API to backend
+export interface APINotification {
+  playerName: string,
+  transactionType: string,
+  description: string,
+}
