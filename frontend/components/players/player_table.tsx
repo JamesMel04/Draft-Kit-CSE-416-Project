@@ -112,24 +112,25 @@ function PitchersTable({ players } : {players : PitcherPlayer[]}) {
   const [page, setPage] = useState(1);
   const deferredMlbOnly = useDeferredValue(mlbOnly);
 
-  function sortPitchers(a : PitcherPlayer,b : PitcherPlayer) {
-    let value : number;
-    if(sort.sortParam == "name") {
-      value = a.name > b.name ? 1 : -1;
-    }
-    else if(sort.sortParam == "team") {
-      value = a.team > b.team ? 1 : -1;
-    }
-    else if(sort.sortParam == "positions") {
-      value = a.position > b.position ? 1 : -1;
-    }
-    else {
-      value = a.stats?.projection?.pitching[sort.sortParam] - b.stats?.projection?.pitching[sort.sortParam];
-    }
-    return sort.asc ? value : -value;
-  }
+  
 
   const sortedPlayers = useMemo(() => {
+    function sortPitchers(a : PitcherPlayer,b : PitcherPlayer) {
+      let value : number;
+      if(sort.sortParam == "name") {
+        value = a.name > b.name ? 1 : -1;
+      }
+      else if(sort.sortParam == "team") {
+        value = a.team > b.team ? 1 : -1;
+      }
+      else if(sort.sortParam == "positions") {
+        value = a.position > b.position ? 1 : -1;
+      }
+      else {
+        value = a.stats?.projection?.pitching[sort.sortParam] - b.stats?.projection?.pitching[sort.sortParam];
+      }
+      return sort.asc ? value : -value;
+    }
     return [...players].sort(sortPitchers);
   }, [players, sort]);
 
@@ -215,21 +216,23 @@ function HittersTable({ players }: { players: HitterPlayer[] }) {
   const [page, setPage] = useState(1);
   const deferredPositions = useDeferredValue(selectedPositions);
 
-  function sortHitters(a: HitterPlayer, b: HitterPlayer) {
-    let value: number;
-    if (sort.sortParam == "name") {
-      value = a.name > b.name ? 1 : -1;
-    } else if (sort.sortParam == "team") {
-      value = a.team > b.team ? 1 : -1;
-    } else if (sort.sortParam == "positions") {
-      value = a.position > b.position ? 1 : -1;
-    } else {
-      value = a.stats?.projection?.hitting[sort.sortParam] - b.stats?.projection?.hitting[sort.sortParam];
-    }
-    return sort.asc ? value : -value;
-  }
+  
 
   const sortedPlayers = useMemo(() => {
+    function sortHitters(a: HitterPlayer, b: HitterPlayer) {
+      let value: number;
+      if (sort.sortParam == "name") {
+        value = a.name > b.name ? 1 : -1;
+      } else if (sort.sortParam == "team") {
+        value = a.team > b.team ? 1 : -1;
+      } else if (sort.sortParam == "positions") {
+        value = a.position > b.position ? 1 : -1;
+      } else {
+        value = a.stats?.projection?.hitting[sort.sortParam] - b.stats?.projection?.hitting[sort.sortParam];
+      }
+      return sort.asc ? value : -value;
+    }
+
     return [...players].sort(sortHitters);
   }, [players, sort]);
 
