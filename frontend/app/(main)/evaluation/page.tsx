@@ -97,6 +97,11 @@ export default function Evaluation() {
             renderCell: (player: PlayerEvaluation) => player.positions?.join(", ") || "-",
         },
         {
+            header: "Rank",
+            sortField: "evaluation.rankValue",
+            renderCell: (player: PlayerEvaluation) => player.evaluation.rankValue.toFixed(3),
+        },
+        {
             header: "Value",
             sortField: "evaluation.auctionPrice",
             renderCell: (player: PlayerEvaluation) => `$${player.evaluation.auctionPrice.toFixed(2)}`,

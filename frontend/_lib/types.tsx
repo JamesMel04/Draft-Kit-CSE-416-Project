@@ -161,6 +161,8 @@ export type SortParamEvaluation =
   | "suggestedValue"
   | "auctionPrice"
   | "evaluation.auctionPrice"
+  | "rankValue"
+  | "evaluation.rankValue"
   | "normalizedValue"
   | "evaluation.normalizedValue";
 export type SortField = SortParamHitter | SortParamPitcher | SortParamEvaluation;
@@ -246,6 +248,7 @@ export type PlayerEvaluation = {
 	positions: RosterSlot[];
 	suggestedValue: number;
 	evaluation: {
+    rankValue: number;
     normalizedValue: number;
     auctionPrice: number;
 	};

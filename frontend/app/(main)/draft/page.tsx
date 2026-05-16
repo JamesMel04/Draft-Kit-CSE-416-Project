@@ -567,7 +567,13 @@ export default function Draft() {
       renderCell: (player: PlayerEvaluation) => player.positions.join(", "),
     },
     {
+      header: "Rank",
+      sortField: "evaluation.rankValue" as const,
+      renderCell: (player: PlayerEvaluation) => player.evaluation.rankValue.toFixed(3),
+    },
+    {
       header: "Value",
+      sortField: "evaluation.auctionPrice" as const,
       renderCell: (player: PlayerEvaluation) => `$${Math.round(player.evaluation.auctionPrice)}`,
     },
     {
@@ -751,6 +757,7 @@ export default function Draft() {
               <div className="mt-2 grid gap-2 sm:grid-cols-4">
                 {[
                   { label: "Player", value: selectedEvaluation.name },
+                  { label: "Rank Value", value: selectedEvaluation.evaluation.rankValue.toFixed(3) },
                   { label: "Suggested Value", value: `$${selectedEvaluation.suggestedValue}` },
                   { label: "Auction Price", value: `$${selectedEvaluation.evaluation.auctionPrice}` },
                   { label: "Eval Score", value: selectedEvaluation.evaluation.normalizedValue },

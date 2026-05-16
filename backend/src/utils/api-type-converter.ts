@@ -136,7 +136,8 @@ export function convertPlayerValuationToEvaluation(player: PlayerData, valuation
 		team: player.team,
 		positions: player.positions,
 		suggestedValue: player.suggestedValue,
-		evaluation: {
+	evaluation: {
+        rankValue: valuation.rankValue ?? 0,
         normalizedValue: valuation.normalizedValue,
         auctionPrice: valuation.auctionPrice
     }
