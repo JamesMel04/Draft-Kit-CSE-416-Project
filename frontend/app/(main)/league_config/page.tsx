@@ -3,29 +3,59 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { getPlayers } from "@/_lib/api";
+import { getPlayers, loadDraft } from "@/_lib/api";
 import { allPositions } from "@/_lib/consts";
+import {DraftData} from '@/_lib/types';
 import { LeagueData, Player, PlayerID, Position } from "@/_lib/types";
+import { useUser } from '@auth0/nextjs-auth0';
+import { User } from "@auth0/nextjs-auth0/types";
 
 type TeamState = {
   name: string;
   roster: Partial<Record<Position, Player>>;
 };
+async function checkDraft(user:User){
 
+  let draft:DraftData;
+  let state:TeamState[]=[];
+  if(user){
+    draft=await loadDraft(user?.sub);
+    if(user && draft){
+    state.push({name:draft.teamName,roster:(draft.roster as Partial<Record<Position,Player>>)});
+    }
+  }//else{
+  //   state=[
+  //   { name: "Team 1", roster: {} },
+  //   { name: "Team 2", roster: {} },
+  //   ]
+  // }
+  return state;
+}
 export default function LeagueConfigPage() {
   const router = useRouter();
-
+  const { user } = useUser();
   const [leagueName, setLeagueName] = useState("My League");
   const [budget, setBudget] = useState(260);
-  const [teams, setTeams] = useState<TeamState[]>([
-    { name: "Team 1", roster: {} },
-    { name: "Team 2", roster: {} },
-  ]);
+  const [teams, setTeams] = useState<TeamState[]>([]);
+  useEffect(()=>{
+    const load=async ()=>{
+      try{
+        const res=await checkDraft(user as User);
+        setTeams(res);
+      }catch(e){
+        console.log(e);
+      }
+    }
+    load();
+  },[
+    // { name: "Team 1", roster: {} },
+    // { name: "Team 2", roster: {} },
+    ]);
 
   // Taxi league config
   const [taxiDraftEnabled, setTaxiDraftEnabled] = useState(true);
   const [taxiRosterSlots, setTaxiRosterSlots] = useState(4);
-  const [taxiDraftOrder, setTaxiDraftOrder] = useState<number[]>([0, 1]);
+  const [taxiDraftOrder, setTaxiDraftOrder] = useState<number[]>([]);
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(false);

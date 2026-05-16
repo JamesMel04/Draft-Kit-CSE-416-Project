@@ -109,6 +109,17 @@ export async function saveDraft(draft: Partial<DraftData>, userId?: string): Pro
     }
 }
 
+export async function loadDraft(userId?:string):Promise<any>{
+
+    try{
+        const res=(await api.get('/drafts/saved',{headers:{'x-user-id':userId}})).data;
+        return res;
+    }catch(err){
+        console.error("Draft loading failed:",err);
+        throw err;
+    }
+}
+
 export async function getSavedDrafts(userId?: string): Promise<DraftData[]> {
     try {
         const res = (await api.get<SavedDraftsResponse>("/drafts/saved", {
