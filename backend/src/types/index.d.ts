@@ -65,6 +65,7 @@ export type PlayerEvaluation = {
 	positions: RosterSlot[];
 	suggestedValue: number;
 	evaluation: {
+    rankValue: number;
     normalizedValue: number;
     auctionPrice: number;
 	};
@@ -281,6 +282,7 @@ export interface PlayerPools {
 
 export interface PlayerValuation {
     id: PlayerID;
+    rankValue: number;
     normalizedValue: number;
     auctionPrice: number;
 }
