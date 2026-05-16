@@ -8,6 +8,7 @@ import playersRouter from './routes/players';
 import compareRouter from './routes/compare';
 import draftsRouter from './routes/drafts';
 import evaluationRouter from './routes/evaluation';
+import notificationsRouter from './routes/notifications'
 import { initTestData } from './data/test-data';
 
 dotenv.config();
@@ -31,6 +32,7 @@ initTestData()
     app.use('/compare', compareRouter);
     app.use('/drafts', draftsRouter);
     app.use('/evaluation', evaluationRouter);
+    app.use('/notifications', notificationsRouter);
 
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);

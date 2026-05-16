@@ -264,3 +264,18 @@ Common status codes:
 | 400 | Bad request (missing/invalid required input) |
 | 500 | Internal server error |
 | 502 | Upstream evaluator/API failure |
+
+## Notifications
+POST `/notifications` endpoint receives notifications from the API of type:
+{
+  playerName: string,
+  transactionType: string,
+  description: string,
+}
+
+GET `/notifications` endpoint is tied to the frontend of the DraftKit. Acting as an event source. Notifying the frontend components of any notifications.
+It's basically a one way websocket, where only the server sends to the client. This is easiest cause we don't need the client sending anything to the notifications endpoint
+
+### Logic
+Both the POST and GET endpoints share a set of **response** objects which are tied back to each client that polls the GET endpoint. 
+Then, when the POST endpoint is given a new notification, it iterates through each client in the set, sending the notification to each one.
