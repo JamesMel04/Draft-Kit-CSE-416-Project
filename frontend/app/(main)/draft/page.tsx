@@ -79,18 +79,19 @@ export default function Draft() {
   // ROSTER (display names)
   // -------------------------
   const fullRoster = useMemo(() => {
-    const completed: Record<TeamName, Record<Position, string | null>> = {} as any;
+    const completed: Record<TeamName, Record<Position, string | null>> = {};
     teams.forEach((team) => {
-      completed[team] = {} as any;
+      const teamRoster = {} as Record<Position, string | null>;
       allPositions.forEach((pos) => {
         const playerId = config?.teams?.[team]?.roster[pos];
         if (playerId) {
           const match = players.find((p) => p.id === playerId);
-          completed[team][pos] = match?.name ?? String(playerId);
+          teamRoster[pos] = match?.name ?? String(playerId);
         } else {
-          completed[team][pos] = null;
+          teamRoster[pos] = null;
         }
       });
+      completed[team] = teamRoster;
     });
     return completed;
   }, [teams, config, players]);
@@ -100,12 +101,13 @@ export default function Draft() {
   // -------------------------
   const fullRosterIds = useMemo(() => {
     if (!config?.teams) return {} as Record<TeamName, Record<Position, PlayerID | null>>;
-    const completed: Record<TeamName, Record<Position, PlayerID | null>> = {} as any;
+    const completed: Record<TeamName, Record<Position, PlayerID | null>> = {};
     for (const team of teams) {
-      completed[team] = {} as any;
+      const teamRoster = {} as Record<Position, PlayerID | null>;
       for (const pos of allPositions) {
-        completed[team][pos] = config.teams[team]?.roster[pos] ?? null;
+        teamRoster[pos] = config.teams[team]?.roster[pos] ?? null;
       }
+      completed[team] = teamRoster;
     }
     return completed;
   }, [teams, config]);
@@ -120,7 +122,7 @@ export default function Draft() {
   // BUDGETS — debounced to prevent grid re-renders on every keystroke
   // -------------------------
   const [localBudgets, setLocalBudgets] = useState<Record<TeamName, string>>({});
-  const [teamBudgets, setTeamBudgets] = useState<Record<TeamName, number>>({});
+  const [, setTeamBudgets] = useState<Record<TeamName, number>>({});
   const budgetTimers = useRef<Record<TeamName, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
@@ -317,6 +319,42 @@ export default function Draft() {
     return taken;
   }, [teams, rosterPlayerIds]);
 
+  const liveLeagueData = useMemo<LeagueData | undefined>(() => {
+    if (!config?.teams) return config;
+
+    const liveTeams = Object.fromEntries(
+      teams.map((team) => {
+        const liveRoster = Object.fromEntries(
+          allPositions
+            .map((pos) => [pos, rosterPlayerIds[team]?.[pos] ?? undefined] as const)
+            .filter(([, playerId]) => playerId !== undefined && playerId !== null)
+        ) as Partial<Record<Position, PlayerID | undefined>>;
+
+        return [
+          team,
+          {
+            ...config.teams[team],
+            roster: liveRoster,
+          },
+        ];
+      })
+    ) as LeagueData["teams"];
+
+    return {
+      ...config,
+      teams: liveTeams,
+    };
+  }, [config, rosterPlayerIds, teams]);
+
+  const liveDraftStateKey = useMemo(() => {
+    return JSON.stringify(
+      teams.map((team) => [
+        team,
+        allPositions.map((pos) => rosterPlayerIds[team]?.[pos] ?? null),
+      ])
+    );
+  }, [rosterPlayerIds, teams]);
+
   // builds a set of all player IDs that is already drafted on taxi 
   const taxiTakenPlayerIds = useMemo(() => {
     const taken = new Set<PlayerID>();
@@ -372,7 +410,7 @@ export default function Draft() {
     setAssignSlotByPlayer((prev) => ({
       ...prev,
       [playerId]: allPositions.find((pos) => !roster[team]?.[pos] && canPlayerFitSlot(player.positions, pos)),
-    } as any));
+    }));
   }, [roster]);
 
   const handleAddFromSearch = useCallback((player: PlayerEvaluation) => {
@@ -530,7 +568,7 @@ export default function Draft() {
     },
     {
       header: "Value",
-      renderCell: (player: PlayerEvaluation) => `$${player.suggestedValue}`,
+      renderCell: (player: PlayerEvaluation) => `$${Math.round(player.evaluation.auctionPrice)}`,
     },
     {
       header: "Eval",
@@ -871,7 +909,8 @@ export default function Draft() {
               playerIds: mainDraftPlayerIds.length ? mainDraftPlayerIds : [-1],
               alreadyTakenIds: filterTakenPlayers ? Array.from(takenPlayerIds) : undefined,
             })}
-            leagueData={config}
+            leagueData={liveLeagueData}
+            refreshKey={liveDraftStateKey}
           />
         ) : (
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500 shadow-sm">
