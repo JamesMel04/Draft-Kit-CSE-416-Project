@@ -1,8 +1,8 @@
 "use client";
 
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/24/outline';
-import { PlayerEvaluation, PlayerEvaluationQueryParams, Position, SortAsc, SortField, LeagueData, PlayerID, SearchFilterPosition } from '@/_lib/types';
+import { PlayerEvaluation, PlayerEvaluationQueryParams, SortAsc, SortField, LeagueData, PlayerID, SearchFilterPosition } from '@/_lib/types';
 import { getEvaluatedPlayers } from '@/_lib/api';
 import { sortEvaluatedPlayers } from '@/utils/sorters';
 
@@ -28,6 +28,7 @@ type PlayerEvaluationPanelProps = {
     players: PlayerEvaluation[];
   }) => void;
   leagueData?: LeagueData;
+  refreshKey?: string | number;
 };
 
 export default function PlayerEvaluationPanel({
@@ -44,6 +45,7 @@ export default function PlayerEvaluationPanel({
   buildFilters,
   onResultsChange,
   leagueData = undefined,
+  refreshKey,
 }: PlayerEvaluationPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -54,6 +56,7 @@ export default function PlayerEvaluationPanel({
   const [players, setPlayers] = useState<PlayerEvaluation[]>([]);
   const [sortField, setSortField] = useState<SortField>(defaultSort);
   const [sortAsc, setSortAsc] = useState<SortAsc>(defaultAsc);
+  const hasHandledRefreshKeyMount = useRef(false);
 
   const sortedPlayers = useMemo(() => {
     return sortEvaluatedPlayers(players, sortField, sortAsc);
@@ -79,7 +82,7 @@ export default function PlayerEvaluationPanel({
     return sortedPlayers.filter((player) => !hiddenSet.has(player.id));
   }, [hiddenPlayerIds, sortedPlayers]);
 
-  const runSearch = async () => {
+  const runSearch = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -103,7 +106,21 @@ export default function PlayerEvaluationPanel({
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    buildFilters,
+    leagueData,
+    maxPriceInput,
+    minPriceInput,
+    nameInput,
+    onResultsChange,
+    selectedPositions,
+  ]);
+
+  const runSearchRef = useRef(runSearch);
+
+  useEffect(() => {
+    runSearchRef.current = runSearch;
+  }, [runSearch]);
 
   const togglePosition = (position: SearchFilterPosition) => {
     setSelectedPositions((prev) =>
@@ -120,8 +137,18 @@ export default function PlayerEvaluationPanel({
 
   useEffect(() => {
     if (!initialSearchOnMount) return;
-    runSearch();
-  }, []);
+    runSearchRef.current();
+  }, [initialSearchOnMount]);
+
+  useEffect(() => {
+    if (refreshKey === undefined) return;
+    if (!hasHandledRefreshKeyMount.current) {
+      hasHandledRefreshKeyMount.current = true;
+      return;
+    }
+
+    runSearchRef.current();
+  }, [refreshKey]);
 
   useEffect(() => {
     setSortField(defaultSort);
