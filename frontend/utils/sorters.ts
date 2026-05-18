@@ -102,6 +102,10 @@ function getPlayerEvaluationSortValue(player: PlayerEvaluation, sortField: SortF
     return player.evaluation.auctionPrice;
   }
 
+  if (sortField === 'rankValue' || sortField === 'evaluation.rankValue') {
+    return player.evaluation.rankValue;
+  }
+
   if (sortField === 'normalizedValue' || sortField === 'evaluation.normalizedValue') {
     return player.evaluation.normalizedValue;
   }

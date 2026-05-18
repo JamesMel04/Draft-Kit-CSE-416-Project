@@ -192,22 +192,19 @@ export default function PlayerEvaluationPanel({
           {positionOptions.map((pos) => {
             const selected = selectedPositions.includes(pos);
             return (
-              <label
+              <button
+                type="button"
                 key={pos}
+                aria-pressed={selected}
+                onClick={() => togglePosition(pos)}
                 className={`cursor-pointer rounded-md border px-2 py-1 text-xs font-semibold transition ${
                   selected
                     ? "border-blue-600 bg-blue-600 text-white"
                     : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
                 }`}
               >
-                <input
-                  type="checkbox"
-                  checked={selected}
-                  onChange={() => togglePosition(pos)}
-                  className="sr-only"
-                />
                 {pos}
-              </label>
+              </button>
             );
           })}
         </div>
