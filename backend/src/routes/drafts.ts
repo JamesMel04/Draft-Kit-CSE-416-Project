@@ -97,7 +97,7 @@ router.get('/saved', async (req: Request, res: Response) => {
     }
 
     const result = await draftPool.query<DraftRow>(
-      "SELECT * FROM drafts WHERE userid=$1",
+      "SELECT * FROM drafts WHERE userId=$1",
       [userId]
     );
     const drafts = result.rows.map(normalizeDraftRow);
@@ -120,7 +120,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     }
 
     const result = await draftPool.query<DraftRow>(
-      "SELECT * FROM drafts WHERE userid=$1 AND id=$2",
+      "SELECT * FROM drafts WHERE userId=$1 AND id=$2",
       [userId, id]
     );
     const draft = result.rows[0] ? normalizeDraftRow(result.rows[0]) : null;
@@ -156,7 +156,7 @@ router.post('/', async (req: Request, res: Response) => {
       }
 
       const result = await draftPool.query<DraftRow>(
-        "UPDATE drafts SET teamname=$1, roster=$2 WHERE userid=$3 AND id=$4 RETURNING *",
+        "UPDATE drafts SET teamname=$1, roster=$2 WHERE userId=$3 AND id=$4 RETURNING *",
         [teamName, JSON.stringify(roster), userId, id]
       );
       const draft = result.rows[0] ? normalizeDraftRow(result.rows[0]) : null;
@@ -174,7 +174,7 @@ router.post('/', async (req: Request, res: Response) => {
       }
 
       const result = await draftPool.query<DraftRow>(
-        "INSERT INTO drafts (userid, id, teamname, roster) VALUES ($1, $2, $3, $4) RETURNING *",
+        "INSERT INTO drafts (userId, id, teamname, roster) VALUES ($1, $2, $3, $4) RETURNING *",
         [draft.userId, draft.id, draft.teamName, JSON.stringify(draft.roster)]
       );
       res.json({ status: 'created', draft: normalizeDraftRow(result.rows[0]) });
@@ -212,7 +212,7 @@ router.post('/:id/player', async (req: Request, res: Response) => {
     }
 
     const existing = await draftPool.query<DraftRow>(
-      "SELECT * FROM drafts WHERE userid=$1 AND id=$2",
+      "SELECT * FROM drafts WHERE userId=$1 AND id=$2",
       [userId, id]
     );
     const draft = existing.rows[0] ? normalizeDraftRow(existing.rows[0]) : null;
@@ -225,7 +225,7 @@ router.post('/:id/player', async (req: Request, res: Response) => {
       roster: { ...draft.roster, [position]: parsedPlayerId },
     };
     await draftPool.query(
-      "UPDATE drafts SET roster=$1 WHERE userid=$2 AND id=$3",
+      "UPDATE drafts SET roster=$1 WHERE userId=$2 AND id=$3",
       [JSON.stringify(updatedDraft.roster), userId, id]
     );
     res.json({ player: { id: playerId, position }, draft, status: 'added' });
